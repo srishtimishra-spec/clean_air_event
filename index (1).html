@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clean Air Horizons 2026 — Command Centre</title>
+<style>
+  html,body{margin:0;padding:0;background:#f4f6f8;}
+  #cah-root{max-width:1400px;margin:0 auto;}
+</style>
+</head>
+<body>
+<!-- Clean Air Horizons 2026 — Event Command Centre -->
+<div id="cah-root"></div>
+<script>
+/* ============================================================
+   CLEAN AIR HORIZONS 2026 — EVENT COMMAND CENTRE
+   Single source of truth. Live, collaborative, persisted.
+   ============================================================ */
+
+const EVENT = {
+  name: "Clean Air Horizons 2026",
+  tagline: "Achieving India's clean air ambition",
+  dates: "7–8 September 2026",
+  startISO: "2026-09-07",
+  venue: "India Habitat Centre, New Delhi",
+  time: "09:30–18:00 IST",
+  driveFolder: "https://drive.google.com/drive/u/0/folders/1ibAEMn6ljuuJFGEyX5Jf-Pn7IZPR9ssy"
+};
+
+/* ---------- BRAND TOKENS (CEEW) ---------- */
+const C = {
+  orange:"#E85724", orangeTint:"#F39673",
+  green:"#8CB73F", greenShade:"#005C3A", greenTint:"#CCDF84",
+  blue:"#029BD6", blueTint:"#86BFDE", blueShade:"#036493", blueDark:"#023F5C",
+  red:"#B93A26", redDark:"#811C19", grey:"#7F7F7F", charcoal:"#333232", black:"#0C0B0B"
+};
+
+const WORKSTREAMS = [
+  "Programme & Content","Speakers & Panellists","Invitations & Outreach",
+  "Registrations","Venue & Logistics","Branding & Communications",
+  "Design & Creatives","Documentation","Team Coordination"
+];
+
+const STATUSES = ["Not started","In progress","Awaiting input","Blocked","Under review","Completed","Not required"];
+const STATUS_COLOR = {
+  "Not started":"#7F7F7F","In progress":"#029BD6","Awaiting input":"#E8a724".replace('a','8')/*fallback*/ ,
+  "Blocked":"#B93A26","Under review":"#8CB73F","Completed":"#005C3A","Not required":"#c9c9c9"
+};
+STATUS_COLOR["Awaiting input"]="#E85724";
+const PRIORITY_COLOR = {High:"#B93A26",Medium:"#E85724",Low:"#7F7F7F"};
+
+/* ---------- SEED DATA (from checklist + session PoCs + provided links) ---------- */
+const SEED_TASKS = [
+ ["Concept note","Programme & Content","Sahbaz, Priyanka, Prarthana","","","Medium","Completed","2026-07-24","https://docs.google.com/document/d/14AGJa7DByl2FqSC9V-zdW5bOK7viWs9mqwO7oblklI8/edit","Concept note & agenda","Send mail to outreach once final"],
+ ["Agenda","Programme & Content","Sahbaz, Priyanka, Prarthana","","","High","Completed","2026-07-24","https://docs.google.com/document/d/1Ykq5feGJuP1LUFm_bn8MqOgSY-zpV_1xjv9NG6AVcaE/edit","CAH Agenda 2026","Send mails to colleagues and teams"],
+ ["Common email for the CAH secretariat","Team Coordination","Sahbaz","Ajit ji","","Medium","Completed","2026-07-21","","",""],
+ ["Writing to Outreach about the event (email)","Invitations & Outreach","Sahbaz","","","Medium","Completed","","","",""],
+ ["Participants to be invited — list","Invitations & Outreach","To be assigned","","","High","Completed","","https://docs.google.com/spreadsheets/d/1zWKvJ9Fd3EzoyePYT97HDLqaMeCEj4GwY3BxnPoaQmk/edit","List of Invitees",""],
+ ["Venue booking","Venue & Logistics","Sahbaz","Yadu, Iris","","High","Completed","","","",""],
+ ["Finalising the Chief Guest","Speakers & Panellists","Priyanka, Prarthana","","","High","In progress","2026-08-14","","","Confirm before formal invitation can be issued"],
+ ["Finalising experts for panels","Speakers & Panellists","Project Leads","","","High","In progress","2026-07-31","","","Blocks bio compilation & briefing notes"],
+ ["Drafting letters for Chief Guests","Invitations & Outreach","Khushi, Evita","","Awaiting AG review","High","Under review","2026-07-24","https://docs.google.com/document/d/1vaDLZpuaW5VRCAZXgIm4QwJVfAepxcoLkLJargc--ak/edit","Draft letters for CAH","Drafted, awaiting review"],
+ ["Drafting letters for Partner proposals","Invitations & Outreach","Sahbaz","","","Medium","Completed","2026-07-24","https://docs.google.com/document/d/16JiHUMaEZbusySHJwvnkZbTM1cUYwxmZQaUlElODJuU/edit","Draft partnership letter","Drafted, awaiting review"],
+ ["Email for inviting partners for parallel sessions","Invitations & Outreach","Sahbaz","","","Medium","Completed","","","",""],
+ ["Email draft for the panellists","Invitations & Outreach","Evita","","","Medium","Completed","","https://docs.google.com/document/d/1vaDLZpuaW5VRCAZXgIm4QwJVfAepxcoLkLJargc--ak/edit","Draft letters for CAH",""],
+ ["Partner proposal document","Programme & Content","Khushi, Evita","","","High","In progress","2026-08-10","https://docs.google.com/document/d/1UvzaPlvyBVob0Ha1qQ62fHoLfX4Xx89ZVH3LLlRhK9A/edit","CAH-2026 Session template","Partnership confirmation draft email available"],
+ ["Coordinating and sending letters to recipients","Invitations & Outreach","Shubhi","Ganesh, Kakoli","Letters signed by AG","High","Blocked","2026-07-31","","","Waiting on AG signature"],
+ ["Draft email for inviting participants","Invitations & Outreach","Khushi","Iris","","Medium","In progress","2026-07-24","https://docs.google.com/document/d/1HQEJjqFsgtCkspgXznbV3SVjx-F3nlbopWYwr7pju4c/edit","Draft email for CAH","Drafted, awaiting review"],
+ ["CAH social media announcement","Branding & Communications","Sahbaz","","","Medium","Completed","","https://docs.google.com/spreadsheets/d/1f-6fmZbmvt8A768SudwwItvgbMRPX0uTODZJR6MrRJs/edit","Social media tracker",""],
+ ["Flyer and landing slide for the event","Design & Creatives","Sahbaz, Aadya","Iris","","Medium","Completed","2026-07-31","","",""],
+ ["Briefing note for AG","Programme & Content","Srish","","Panel experts finalised","High","Not started","2026-08-21","","","Depends on expert finalisation"],
+ ["Speech & talking points for guests","Programme & Content","Aadya","","Chief guest confirmed","High","Not started","2026-08-21","","",""],
+ ["Preparing detailed minute-by-minute agenda","Programme & Content","Evita","","Agenda finalised","High","Not started","2026-08-21","","",""],
+ ["Format of panel discussion","Programme & Content","Sahbaz","","","Medium","Not started","","","",""],
+ ["Questions for panel discussion","Programme & Content","Sahbaz","","","Medium","Not started","","","",""],
+ ["Questions for fireside chat","Programme & Content","Sahbaz","","","Medium","Not started","","","",""],
+ ["Bio and high-res pictures of speakers","Speakers & Panellists","Aadya, Ayushi","","Speakers confirmed","High","In progress","","https://docs.google.com/document/d/17RDDxFlDNVPtnlxlAow6FUpeMZCictAoxljk2rODjyQ/edit","Bios of speakers","Per-session bio owners set in Sessions view"],
+ ["Email: reports to display on registration desk","Documentation","Sahbaz","","","Low","Not started","","","",""],
+ ["Email: bag/folder for panellists & moderators","Venue & Logistics","Sahbaz","PB","","Low","Not started","","","",""],
+ ["Email to Outreach for translation of AG brief","Programme & Content","Srish","Rishi","AG brief drafted","Medium","Not started","","","",""],
+ ["Keynote address — pointers for Ministers","Programme & Content","Aadya","","","High","Not started","","","",""],
+ ["AG's signature for letters","Invitations & Outreach","Shubhi","","Letters drafted & reviewed","High","Blocked","","","","Blocks sending of all formal letters"],
+ ["Formal invitation to Chief Guests","Invitations & Outreach","Priyanka, Prarthana","CEO's Office","Chief guest confirmed","High","Blocked","","","",""],
+ ["Formal invitation to panellists","Invitations & Outreach","To be assigned","Ganesh, Prarthana","Panellists confirmed","High","Blocked","","","",""],
+ ["Invite & email to the panellists","Invitations & Outreach","To be assigned","Prarthana, Gayathri","","Medium","Not started","","","",""],
+ ["Minute-to-minute (M2M) event-day schedule","Programme & Content","Evita","","","High","Not started","","","",""],
+ ["Memento for the Chief Guests","Venue & Logistics","Shubhi","","","Medium","Not started","","","",""],
+ ["Prep block for Arunabha (CEO)","Programme & Content","Sahbaz","","","High","Not started","","","",""],
+ ["Website content","Documentation","Srishti, Rahul","","","Medium","Not started","","","",""],
+ ["Author's quote","Documentation","Srishti, Rahul","","","Low","Not started","","","",""],
+ ["Proof reading","Documentation","Srishti, Rahul","","","Medium","Not started","","","",""],
+ ["Digital assets: QR code for agenda & reports","Design & Creatives","Srishti, Rahul","Yadu, Iris","","Medium","Not started","","","",""],
+ ["Google form & WhatsApp for participant registration","Registrations","Srishti, Rahul","Iris","","High","Not started","","","",""],
+ ["LinkedIn pre-event post","Branding & Communications","Evita, Sahbaz","Shreya, Iris","","Medium","Not started","","","",""],
+ ["LinkedIn post-event post","Branding & Communications","Khushi, Sahbaz","Shreya, Iris","","Low","Not started","","","",""],
+ ["Press release","Branding & Communications","Shubhi, Sahbaz","Arunava, Neera","","Medium","Not started","","","",""],
+ ["Emcee","Programme & Content","Aadya","","","Medium","Not started","","","",""]
+].map((r,i)=>({
+  id:"T"+(i+1), task:r[0], workstream:r[1], person:r[2], coord:r[3],
+  dependency:r[4], priority:r[5], status:r[6], start:"", due:r[7],
+  link:r[8], linkName:r[9], notes:r[10], updated:"2026-08-17"
+}));
+
+/* ---------- RESOURCES ---------- */
+const SEED_RESOURCES = [
+ ["CAH Concept note & agenda","Agenda","Programme & Content","Full concept note with three threads (Ambition, Innovation, India trajectory) and thematic sessions.","https://docs.google.com/document/d/14AGJa7DByl2FqSC9V-zdW5bOK7viWs9mqwO7oblklI8/edit","Final"],
+ ["CAH Agenda 2026","Agenda","Programme & Content","Working agenda document for the two-day programme.","https://docs.google.com/document/d/1Ykq5feGJuP1LUFm_bn8MqOgSY-zpV_1xjv9NG6AVcaE/edit","Working"],
+ ["CAH agenda & calendar","Spreadsheet","Programme & Content","Session-by-session calendar and scheduling grid.","https://docs.google.com/spreadsheets/d/1aRtHA_llJF1NJxgQiOesIDv7HaqSFeHG95c1t8f2YPM/edit","Working"],
+ ["List of invitees","Spreadsheet","Invitations & Outreach","Master invitee list for the event.","https://docs.google.com/spreadsheets/d/1zWKvJ9Fd3EzoyePYT97HDLqaMeCEj4GwY3BxnPoaQmk/edit","Working"],
+ ["Draft letters for CAH","Working document","Invitations & Outreach","Draft invitation letters (Chief Guests, panellists).","https://docs.google.com/document/d/1vaDLZpuaW5VRCAZXgIm4QwJVfAepxcoLkLJargc--ak/edit","Working"],
+ ["Draft partnership letter","Working document","Invitations & Outreach","Draft letter for partner proposals.","https://docs.google.com/document/d/16JiHUMaEZbusySHJwvnkZbTM1cUYwxmZQaUlElODJuU/edit","Working"],
+ ["Partnership confirmation email","Working document","Invitations & Outreach","Draft confirmation email for partners.","https://docs.google.com/document/d/1ryFpJZqJHHVP_JTYpBIZIZY_MueaZs7wbZJcqMYb0Os/edit","Working"],
+ ["CAH-2026 Session template","Working document","Programme & Content","Template for partner/parallel session proposals.","https://docs.google.com/document/d/1UvzaPlvyBVob0Ha1qQ62fHoLfX4Xx89ZVH3LLlRhK9A/edit","Working"],
+ ["Draft email for CAH (participants)","Working document","Invitations & Outreach","Draft participant invitation email.","https://docs.google.com/document/d/1HQEJjqFsgtCkspgXznbV3SVjx-F3nlbopWYwr7pju4c/edit","Working"],
+ ["Draft email for speakers","Working document","Invitations & Outreach","Draft outreach email to speakers.","https://docs.google.com/document/d/1DbAvOBV7jTGRbOesdG3DkZKLymId7nT_MgxOw91fk30/edit","Working"],
+ ["Bios of speakers","Speaker information","Speakers & Panellists","Compiled speaker bios and high-res images.","https://docs.google.com/document/d/17RDDxFlDNVPtnlxlAow6FUpeMZCictAoxljk2rODjyQ/edit","Working"],
+ ["Session PoCs & bio owners","Spreadsheet","Programme & Content","Point-of-contact and bio owner per session, both days.","","Working"],
+ ["Side event session proposals","Spreadsheet","Programme & Content","Proposals for side / parallel sessions.","https://docs.google.com/spreadsheets/d/1fAEBG24mXBizjOeJCe2g40SKLjbIzrq6hQ2-LZFQ6OU/edit","Working"],
+ ["Social media announcements tracker","Spreadsheet","Branding & Communications","Tracker for CAH social announcements.","https://docs.google.com/spreadsheets/d/1f-6fmZbmvt8A768SudwwItvgbMRPX0uTODZJR6MrRJs/edit","Working"],
+ ["CAH social media banner","Design file","Design & Creatives","Approved event banner / landing creative.","","Final"],
+ ["About CEEW one-pager","Reference material","Documentation","Institutional one-pager for partner packs.","","Final"],
+ ["CA-Clean Air Horizons 2026 (Drive folder)","Vendor/resource link","Team Coordination","Master Google Drive folder for all event files.",EVENT.driveFolder,"Working"]
+].map((r,i)=>({id:"R"+(i+1),name:r[0],type:r[1],workstream:r[2],desc:r[3],link:r[4],status:r[5],updated:"2026-08-17"}));
+
+/* ---------- PEOPLE (CEEW team roster) ----------
+   name, email, aliases (short names used in the task sheet), org role, event role */
+const SEED_PEOPLE = [
+ ["Aadya Saxena","aadya.saxena@ceew.in","Aadya","Member","Content & bios"],
+ ["Abhishek Dhiman","abhishek.dhiman@ceew.in","Abhishek Dhiman","Member","Session lead"],
+ ["Abhishek Kar","abhishek.kar@ceew.in","Abhishek Kar","Manager",""],
+ ["Apaar Srivastava","apaar.srivastava@ceew.in","Apaar","Member","Session PoC"],
+ ["Arpan Patra","arpan.patra@ceew.in","Arpan","Member","Session PoC"],
+ ["Ayushi Saxena","saxena.ayushi1294@gmail.com","Ayushi","Member (external)","Bio compilation"],
+ ["Ayushman Saboo","ayushman.saboo@ceew.in","Ayushman","Member","Session PoC"],
+ ["Evita Xavier","evita.xavier@ceew.in","Evita","Member","Invitations & M2M agenda"],
+ ["Gayathri Anand","gayathri.anand@ceew.in","Gayathri","Member","Invitation coordination"],
+ ["Khushi Sharma","khushi.sharma@ceew.in","Khushi","Member","Invitations & partner proposals"],
+ ["Kurinji Kemanth","kurinji.Selvaraj@ceew.in","Kurinji","Member","Session PoC"],
+ ["Mohammad Rafiuddin","mohammad.rafiuddin@ceew.in","Rafi|Rafiuddin","Member","Session PoC"],
+ ["Mohammed Sahbaz Ahmed","mohammed.ahmed@ceew.in","Sahbaz","Member","Secretariat & content lead"],
+ ["Navjot Singh Sarao","navjot.sarao@ceew.in","Navjot","Member",""],
+ ["Prarthana Borah","prarthana.borah@ceew.in","Prarthana","Member","Chief guest & invitations"],
+ ["Prince Sant","prince.sant@ceew.in","Prince","Member",""],
+ ["Priyanka Singh","priyanka.singh@ceew.in","Priyanka","Manager","Project lead"],
+ ["Rahul Das","rahul.das@ceew.in","Rahul","Member","Website & registration"],
+ ["Rishikesh P","rishikesh.p@ceew.in","Rishikesh|Rishi","Member","Translation support"],
+ ["Rochishnu Dutta","rochishnu.dutta@ceew.in","Rochishnu","Member","Session PoC"],
+ ["Sankalp Kumar","sankalp.kumar@ceew.in","Sankalp","Member",""],
+ ["Shailja Singla","shailja.singla@ceew.in","Shailja","Member","Session PoC"],
+ ["Shruti Tripathi","shruti.tripathi@ceew.in","Shruti","Member",""],
+ ["Shubhi Verma","shubhi.verma@ceew.in","Shubhi","Member","Coordination & press"],
+ ["Sneha Maria Ignatious","sneha.ignatious@ceew.in","Sneha","Member",""],
+ ["Srish Prakash","srish.prakash@ceew.in","Srish","Member","AG briefing & translation"],
+ ["Srishti Jain","srishti.jain@ceew.in","Srishti Jain","Member","Session PoC"],
+ ["Srishti Mishra","srishti.mishra@ceew.in","Srishti Mishra|Srishti","Member","Website, registration & reports"],
+ ["Sunita Patra","sunita.patra@ceew.in","Sunita","Member","Session PoC"],
+ ["Surya Shekhar Auddy","surya.auddy@ceew.in","Surya","Member","Session PoC"],
+ ["V V Nandagopan","vv.nandagopan@ceew.in","V V Nandagopan|Nandagopan","Member",""],
+ ["Viraj Joshi","viraj.joshi@ceew.in","Viraj","Member","Session PoC"],
+ ["Vishwas Desai","vishwas.desai@ceew.in","Vishwas","Member",""]
+].map((r,i)=>({id:"P"+(i+1),name:r[0],email:r[1],aliases:r[2].split("|"),role:r[3],eventRole:r[4]}));
+
+/* ---------- SESSIONS (from Session PoCs) ---------- */
+const SESSIONS = [
+ ["1","Inaugural session","Priyanka, Sahbaz","Aadya"],
+ ["1","5 report launches","Rahul, Srishti, Niharika","Aadya"],
+ ["1","Plenary 1 — AI for Clean Air: Faster & better AQ management","Rafi","Aadya"],
+ ["1","CA parallel 1 — Schools for Circular Labs","Srishti Mishra","Ayushi"],
+ ["1","Plenary 2 — Electric cooking in low-income households","Surya","Aadya"],
+ ["1","Partner parallel 1 — IIT Gandhinagar","Rafi, Shubhi","Soumya"],
+ ["1","CA parallel 2 — State Clean Air Missions","Abhishek Dhiman, Ayushi","Ayushi"],
+ ["1","CA parallel 3 — Air: The Missing Link in MSME Transition","Sunita, Srish","Ayushi"],
+ ["1","Plenary 3 — Innovation in corporate strategy","Arpan, Rakshita","Aadya"],
+ ["1","Partner parallel 2 — Decision Support Systems (mobility)","Apaar","Soumya"],
+ ["1","Voices from the ground","Sunita, Soumya","Aadya"],
+ ["1","Cultural programme","Aadya","Aadya"],
+ ["2","Plenary 4 — Global economic assessment (special)","Priyanka, Sahbaz","Aadya"],
+ ["2","Plenary 5 — Circular solutions for clean air in cities","Ayushman","Aadya"],
+ ["2","Partner parallel 3 — AI-enabled behavioural solutions (ABCD)","Srishti Jain","Soumya"],
+ ["2","Plenary 6 — Scaling clean air solutions","Kurinji","Aadya"],
+ ["2","CA parallel 4 — Ecological restoration / greening cities","Rochishnu","Ayushi"],
+ ["2","CA parallel 5 — Air emissions in ESG reporting","Shubhi","Ayushi"],
+ ["2","CA parallel 6 — Women & Air","Kurinji","Ayushi"],
+ ["2","Partner parallel 4 — Dignity & livelihoods (Purpose)","Khushi","Soumya"],
+ ["2","CA parallel 7 — BWG compliance","Aadya","Ayushi"],
+ ["2","Partner parallel 5 — Youth, cities & partnerships (Gosharpner)","Shailja, Srishti","Soumya"],
+ ["2","CA parallel 8 — Air quality resilience","Viraj","Ayushi"],
+ ["2","Valedictory session","Emcee","—"]
+].map((r,i)=>({id:"S"+(i+1),day:r[0],title:r[1],poc:r[2],bio:r[3]}));
+
+/* ---------- AGENDA GRID (from concept note) ----------
+   day, time, track A (Silver Oak), track B (Magnolia), type: plenary|parallel|break|special */
+const SEED_AGENDA = [
+ ["1","09:30–10:30","Registration & tea","","break"],
+ ["1","10:30–12:00","Inaugural — Opening address: Dr Arunabha Ghosh, CEO","","special"],
+ ["1","12:00–12:15","Report launches (5 reports)","","special"],
+ ["1","12:15–13:15","Plenary 1 — AI for Clean Air","CA parallel 1 — Schools for Circular Labs","plenary"],
+ ["1","13:15–14:15","Networking lunch","","break"],
+ ["1","14:15–15:15","Plenary 2 — Electric cooking in low-income households","Partner parallel 1 — IIT Gandhinagar","plenary"],
+ ["1","15:15–16:15","CA parallel 2 — State Clean Air Missions","CA parallel 3 — Air: The Missing Link in MSME Transition","parallel"],
+ ["1","16:15–16:30","Break","","break"],
+ ["1","16:30–17:30","Plenary 3 — Innovation in corporate strategy","Partner parallel 2 — EV mandates & mobility (DSS)","plenary"],
+ ["1","17:30–18:30","Voice, Visibility & Vision: Clean Air, Young Ideas","","special"],
+ ["1","18:30–21:00","Networking dinner","","break"],
+ ["2","10:00–11:00","Plenary 4 — Global economic assessment (special)","","special"],
+ ["2","11:00–12:00","Plenary 5 — Circular solutions for clean air in cities","Partner parallel 3 — AI-enabled behavioural solutions","plenary"],
+ ["2","12:00–13:00","Plenary 6 — Scaling clean air solutions","CA parallel 4 — Ecological restoration / greening cities","plenary"],
+ ["2","13:00–14:00","Networking lunch","","break"],
+ ["2","14:00–15:00","CA parallel 5 — Global carbon & local air / ESG","CA parallel 6 — Women & Air","parallel"],
+ ["2","15:00–16:00","Partner parallel 4 — Dignity & livelihoods (Purpose)","CA parallel 7 — Bulk Waste Generator compliance","parallel"],
+ ["2","16:00–16:45","Partner parallel 5 — Youth, cities & partnerships","CA parallel 8 — Air quality resilience","parallel"],
+ ["2","16:45–17:00","Valedictory session","","special"]
+].map((r,i)=>({id:"AG"+(i+1),day:r[0],time:r[1],a:r[2],b:r[3],type:r[4]}));
+
+/* ---------- QUICK LINKS (editable) ---------- */
+const SEED_QUICKLINKS = [
+ ["Master Drive folder", EVENT.driveFolder],
+ ["Concept note & agenda","https://docs.google.com/document/d/14AGJa7DByl2FqSC9V-zdW5bOK7viWs9mqwO7oblklI8/edit"],
+ ["List of invitees","https://docs.google.com/spreadsheets/d/1zWKvJ9Fd3EzoyePYT97HDLqaMeCEj4GwY3BxnPoaQmk/edit"],
+ ["Bios of speakers","https://docs.google.com/document/d/17RDDxFlDNVPtnlxlAow6FUpeMZCictAoxljk2rODjyQ/edit"],
+ ["Draft email for speakers","https://docs.google.com/document/d/1DbAvOBV7jTGRbOesdG3DkZKLymId7nT_MgxOw91fk30/edit"],
+ ["Side event session proposals","https://docs.google.com/spreadsheets/d/1fAEBG24mXBizjOeJCe2g40SKLjbIzrq6hQ2-LZFQ6OU/edit"]
+].map((r,i)=>({id:"Q"+(i+1),label:r[0],url:r[1]}));
+
+/* ============================================================
+   STORAGE
+   Works in three situations:
+   - inside the Claude preview            -> window.storage
+   - on a normal web host / GitHub Pages  -> browser localStorage
+   - opened from disk (file://) or private -> memory + on-screen warning
+     so nobody loses work without knowing.
+   ============================================================ */
+const KEY = "cah2026:data";
+const HAS_ARTIFACT_STORAGE = (typeof window !== "undefined") && window.storage
+  && typeof window.storage.get === "function" && typeof window.storage.set === "function";
+
+/* Does localStorage actually persist here? (blocked on file:// and some private windows) */
+let LOCAL_OK = false;
+try{
+  const tk = "cah2026:__t";
+  localStorage.setItem(tk, "1");
+  LOCAL_OK = localStorage.getItem(tk) === "1";
+  localStorage.removeItem(tk);
+}catch(e){ LOCAL_OK = false; }
+
+const STORAGE_MODE = HAS_ARTIFACT_STORAGE ? "artifact" : (LOCAL_OK ? "local" : "memory");
+let MEMORY_STORE = null; /* mirror so the current session always works */
+
+async function loadData(){
+  try{
+    if(STORAGE_MODE === "artifact"){
+      const res = await window.storage.get(KEY, true);
+      if(res && res.value) return JSON.parse(res.value);
+    } else if(STORAGE_MODE === "local"){
+      const raw = localStorage.getItem(KEY);
+      if(raw) return JSON.parse(raw);
+    } else if(MEMORY_STORE){
+      return JSON.parse(MEMORY_STORE);
+    }
+  }catch(e){ /* first run or unavailable */ }
+  return null;
+}
+async function saveData(d){
+  const json = JSON.stringify(d);
+  MEMORY_STORE = json; /* always keep an in-memory mirror */
+  try{
+    if(STORAGE_MODE === "artifact"){
+      await window.storage.set(KEY, json, true);
+    } else if(STORAGE_MODE === "local"){
+      localStorage.setItem(KEY, json);
+    }else{
+      return false; /* memory-only */
+    }
+    return true;
+  }catch(e){
+    console.error("save failed", e);
+    flash("This browser is blocking storage — use Backup to keep your changes");
+    return false;
+  }
+}
+
+let DATA = { tasks:[], resources:[], people:[], announcements:[], notes:[], quickLinks:[], agenda:[], sessions:[] };
+let VIEW = "dashboard";
+let FILTER_PERSON = "";
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+const $ = (s,el=document)=>el.querySelector(s);
+const el = (t,c,txt)=>{const e=document.createElement(t); if(c)e.className=c; if(txt!=null)e.textContent=txt; return e;};
+const esc = s => (s==null?"":String(s)).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const TODAY = new Date("2026-08-17T00:00:00");
+function daysBetween(iso){ if(!iso) return null; const d=new Date(iso+"T00:00:00"); return Math.round((d-TODAY)/86400000); }
+function fmtDate(iso){ if(!iso) return "—"; const d=new Date(iso+"T00:00:00"); return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short"}); }
+function isOpen(t){ return t.status!=="Completed" && t.status!=="Not required"; }
+function flash(msg){
+  const f=el("div","cah-flash",msg); document.body.appendChild(f);
+  requestAnimationFrame(()=>f.classList.add("show"));
+  setTimeout(()=>{f.classList.remove("show"); setTimeout(()=>f.remove(),300);},2200);
+}
+function countdown(){ const d=daysBetween(EVENT.startISO); return d; }
+
+/* ============================================================
+   RENDER SHELL
+   ============================================================ */
+function render(){
+  const root = $("#cah-root");
+  root.innerHTML = "";
+  root.appendChild(buildSidebar());
+  const main = el("div","cah-main");
+  main.appendChild(buildTopbar());
+  const content = el("div","cah-content");
+  content.id = "cah-view";
+  main.appendChild(content);
+  root.appendChild(main);
+  renderView();
+}
+
+const NAV = [
+  ["dashboard","Dashboard","home"],
+  ["tasks","Master task tracker","check"],
+  ["workstreams","Workstreams","layers"],
+  ["dependencies","Dependencies & blockers","link"],
+  ["people","People & responsibilities","users"],
+  ["sessions","Sessions & PoCs","mic"],
+  ["timeline","Timeline & key dates","calendar"],
+  ["resources","Resources & documents","folder"],
+  ["notes","Meeting notes & decisions","note"]
+];
+
+function icon(name){
+  const p = {
+    home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
+    check:'<path d="M20 6 9 17l-5-5"/>',
+    layers:'<path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/>',
+    link:'<path d="M9 12a4 4 0 0 1 4-4h3a4 4 0 0 1 0 8h-1"/><path d="M15 12a4 4 0 0 1-4 4H8a4 4 0 0 1 0-8h1"/>',
+    users:'<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M17 6a3 3 0 0 1 0 6"/><path d="M21 20a5 5 0 0 0-4-5"/>',
+    mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><path d="M12 17v4"/>',
+    calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/>',
+    folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',
+    note:'<path d="M5 3h11l4 4v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M15 3v5h5"/>'
+  }[name]||"";
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+}
+
+function buildSidebar(){
+  const s = el("aside","cah-side");
+  const brand = el("div","cah-brand");
+  brand.innerHTML = `
+    <div class="cah-cloud">${icon('home').replace('home','')}
+      <svg viewBox="0 0 40 26" aria-hidden="true"><path d="M9 22a7 7 0 0 1 0-14 8 8 0 0 1 15 .5A6 6 0 1 1 31 22Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+    </div>
+    <div>
+      <div class="cah-brand-name">Clean Air Horizons</div>
+      <div class="cah-brand-year">2026 · Command Centre</div>
+    </div>`;
+  s.appendChild(brand);
+
+  const nav = el("nav","cah-nav");
+  NAV.forEach(([k,label,ic])=>{
+    const a = el("button","cah-nav-item"+(VIEW===k?" active":""));
+    a.innerHTML = `<span class="ci">${icon(ic)}</span><span>${label}</span>`;
+    a.onclick = ()=>{ VIEW=k; render(); };
+    nav.appendChild(a);
+  });
+  s.appendChild(nav);
+
+  const foot = el("div","cah-side-foot");
+  const d = countdown();
+  foot.innerHTML = `<a class="cah-drive" href="${EVENT.driveFolder}" target="_blank" rel="noopener">${icon('folder')}<span>Master Drive folder</span></a>`;
+  const backup = el("div","cah-backup-row");
+  const bBtn = el("button","cah-backup-btn"); bBtn.innerHTML = "⭳ Backup";
+  bBtn.title = "Download all hub data as a file";
+  bBtn.onclick = exportData;
+  const rBtn = el("button","cah-backup-btn"); rBtn.innerHTML = "⭱ Restore";
+  rBtn.title = "Load hub data from a backup file";
+  rBtn.onclick = importData;
+  backup.appendChild(bBtn); backup.appendChild(rBtn);
+  foot.appendChild(backup);
+  const count = el("div","cah-side-count"); count.innerHTML = `<b>${d}</b> days to go`;
+  foot.appendChild(count);
+  s.appendChild(foot);
+  return s;
+}
+
+/* ---------- BACKUP / RESTORE ---------- */
+function exportData(){
+  try{
+    const blob = new Blob([JSON.stringify(DATA,null,2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "CAH2026-hub-backup-" + new Date().toISOString().slice(0,10) + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    flash("Backup downloaded");
+  }catch(e){ console.error(e); flash("Could not create backup"); }
+}
+function importData(){
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = "application/json,.json";
+  inp.onchange = ()=>{
+    const file = inp.files && inp.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const loaded = JSON.parse(reader.result);
+        if(!loaded || !loaded.tasks){ flash("That file isn't a valid backup"); return; }
+        if(!confirm("Replace everything currently in the hub with this backup?")) return;
+        DATA = loaded;
+        persist(); render(); flash("Backup restored");
+      }catch(e){ console.error(e); flash("Could not read that file"); }
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
+
+function buildTopbar(){
+  const bar = el("header","cah-top");
+  const title = NAV.find(n=>n[0]===VIEW)[1];
+  const left = el("div","cah-top-left");
+  left.innerHTML = `<h1>${title}</h1><span class="cah-top-sub">${EVENT.dates} · ${EVENT.venue}</span>`;
+  bar.appendChild(left);
+
+  const right = el("div","cah-top-right");
+  // person filter (global "waiting on me" lens)
+  const sel = el("select","cah-lens");
+  sel.innerHTML = `<option value="">All people</option>` +
+    uniquePeople().map(p=>`<option ${FILTER_PERSON===p?'selected':''}>${esc(p)}</option>`).join("");
+  sel.onchange = e=>{ FILTER_PERSON=e.target.value; renderView(); };
+  const lensWrap = el("label","cah-lens-wrap");
+  lensWrap.innerHTML = `<span>Lens</span>`; lensWrap.appendChild(sel);
+  right.appendChild(lensWrap);
+
+  const add = el("button","cah-btn cah-btn-primary");
+  add.innerHTML = `+ Add task`;
+  add.onclick = ()=>openTaskModal(null);
+  right.appendChild(add);
+  bar.appendChild(right);
+  return bar;
+}
+
+/* ============================================================
+   DERIVED HELPERS
+   ============================================================ */
+function splitNames(s){ return (s||"").split(/,|&|\band\b/).map(x=>x.trim()).filter(Boolean); }
+function uniquePeople(){
+  return DATA.people.map(p=>p.name).sort((a,b)=>a.localeCompare(b));
+}
+function aliasesFor(name){
+  const p = DATA.people.find(x=>x.name===name);
+  return (p && p.aliases && p.aliases.length) ? p.aliases : [name];
+}
+/* true if a roster person (by full name) is named in a free-text field like "Sahbaz, Priyanka" */
+function nameInText(fullName, text){
+  if(!fullName) return false;
+  const tokens = splitNames(text);
+  const al = aliasesFor(fullName);
+  return tokens.some(tok => al.includes(tok) || tok===fullName);
+}
+function taskMatchesPerson(t,person){
+  if(!person) return true;
+  return nameInText(person,t.person) || nameInText(person,t.coord);
+}
+
+/* Add a new person to the roster (used by person pickers) */
+function addPersonToRoster(name){
+  name = (name||"").trim();
+  if(!name) return null;
+  if(DATA.people.some(p=>p.name.toLowerCase()===name.toLowerCase())) return name;
+  const short = name.split(" ")[0];
+  DATA.people.push({id:"P"+Date.now(), name, email:"", aliases:[name, short].filter((x,i,a)=>a.indexOf(x)===i), role:"Member", eventRole:""});
+  persist();
+  return name;
+}
+
+/* Reusable person picker: chips of selected people + dropdown to add existing / type a new name.
+   value is a comma-separated string (matches the task-sheet convention). onChange(newValue). */
+function personPicker(value, onChange){
+  const wrap = el("div","cah-picker");
+  let selected = splitNames(value).map(tok=>{
+    const match = DATA.people.find(p=> p.name===tok || (p.aliases&&p.aliases.includes(tok)));
+    return match ? match.name : tok;
+  });
+  function commit(){ onChange(selected.join(", ")); }
+  function draw(){
+    wrap.innerHTML = "";
+    const chips = el("div","cah-picker-chips");
+    if(!selected.length) chips.appendChild(el("span","cah-picker-empty","No one assigned"));
+    selected.forEach((name,idx)=>{
+      const chip = el("span","cah-picker-chip");
+      chip.innerHTML = `<span>${esc(name)}</span>`;
+      const x = el("button","cah-picker-x","×");
+      x.onclick = ()=>{ selected.splice(idx,1); commit(); draw(); };
+      chip.appendChild(x);
+      chips.appendChild(chip);
+    });
+    wrap.appendChild(chips);
+
+    const row = el("div","cah-picker-row");
+    const sel = el("select","cah-picker-select");
+    sel.innerHTML = `<option value="">+ Add person…</option>` +
+      DATA.people.map(p=>p.name).sort((a,b)=>a.localeCompare(b))
+        .filter(n=>!selected.includes(n))
+        .map(n=>`<option>${esc(n)}</option>`).join("") +
+      `<option value="__new">➕ New person not listed…</option>`;
+    sel.onchange = ()=>{
+      const val = sel.value;
+      if(!val){ return; }
+      if(val==="__new"){
+        const nm = prompt("Add a new team member (full name):");
+        const added = addPersonToRoster(nm);
+        if(added && !selected.includes(added)){ selected.push(added); commit(); }
+        draw();
+        return;
+      }
+      if(!selected.includes(val)){ selected.push(val); commit(); }
+      draw();
+    };
+    row.appendChild(sel);
+    wrap.appendChild(row);
+  }
+  draw();
+  return wrap;
+}
+
+/* ============================================================
+   VIEW ROUTER
+   ============================================================ */
+function renderView(){
+  const v = $("#cah-view");
+  v.innerHTML = "";
+  ({
+    dashboard:viewDashboard, tasks:viewTasks, workstreams:viewWorkstreams,
+    dependencies:viewDependencies, people:viewPeople, sessions:viewSessions,
+    timeline:viewTimeline, resources:viewResources, notes:viewNotes
+  }[VIEW])(v);
+}
+
+/* ---------- DASHBOARD ---------- */
+function viewDashboard(v){
+  const open = DATA.tasks.filter(isOpen);
+  const done = DATA.tasks.filter(t=>t.status==="Completed");
+  const pct = DATA.tasks.length? Math.round(done.length/DATA.tasks.filter(t=>t.status!=="Not required").length*100):0;
+  const overdue = open.filter(t=>{const d=daysBetween(t.due); return d!=null && d<0;});
+  const soon = open.filter(t=>{const d=daysBetween(t.due); return d!=null && d>=0 && d<=7;});
+  const blocked = open.filter(t=>t.status==="Blocked");
+  const awaiting = open.filter(t=>t.status==="Awaiting input" || t.status==="Under review");
+
+  // hero
+  const hero = el("div","cah-hero");
+  const d = countdown();
+  hero.innerHTML = `
+    <div class="cah-hero-l">
+      <div class="cah-eyebrow">International Day of Clean Air for blue skies</div>
+      <div class="cah-hero-title">${EVENT.name}</div>
+      <div class="cah-hero-tag">${EVENT.tagline}</div>
+      <div class="cah-hero-meta">${EVENT.dates}&nbsp;&nbsp;·&nbsp;&nbsp;${EVENT.time}&nbsp;&nbsp;·&nbsp;&nbsp;${EVENT.venue}</div>
+    </div>
+    <div class="cah-hero-count">
+      <div class="cah-count-num">${d}</div><div class="cah-count-lbl">days remaining</div>
+    </div>`;
+  v.appendChild(hero);
+
+  // progress bar
+  const prog = el("div","cah-progress-card");
+  prog.innerHTML = `
+    <div class="cah-prog-head"><span>Overall progress</span><b>${pct}%</b></div>
+    <div class="cah-prog-track"><div class="cah-prog-fill" style="width:${pct}%"></div></div>
+    <div class="cah-prog-legend">${done.length} completed · ${open.length} open · ${DATA.tasks.length} total</div>`;
+  v.appendChild(prog);
+
+  // stat tiles
+  const tiles = el("div","cah-tiles");
+  const tileDefs = [
+    ["Overdue", overdue.length, C.red, ()=>{VIEW="tasks";render();setTimeout(()=>applyQuickFilter("overdue"))}],
+    ["Due in 7 days", soon.length, C.orange, ()=>{VIEW="tasks";render();setTimeout(()=>applyQuickFilter("soon"))}],
+    ["Blocked", blocked.length, C.redDark, ()=>{VIEW="dependencies";render();}],
+    ["Awaiting input / review", awaiting.length, C.blue, ()=>{VIEW="tasks";render();setTimeout(()=>applyQuickFilter("awaiting"))}]
+  ];
+  tileDefs.forEach(([lbl,n,col,fn])=>{
+    const t = el("button","cah-tile"); t.style.setProperty("--tc",col);
+    t.innerHTML = `<div class="cah-tile-n">${n}</div><div class="cah-tile-l">${lbl}</div>`;
+    t.onclick = fn; tiles.appendChild(t);
+  });
+  v.appendChild(tiles);
+
+  // agenda infographic (both days at a glance)
+  v.appendChild(buildAgendaInfographic());
+
+  // two-column: attention lists + side
+  const grid = el("div","cah-dash-grid");
+
+  const attention = el("div","cah-card");
+  attention.appendChild(cardHead("Needs attention now", overdue.length+blocked.length+" flagged"));
+  const list = el("div","cah-mini-list");
+  const flagged = [...overdue.map(t=>[t,"Overdue "+Math.abs(daysBetween(t.due))+"d",C.red]),
+                   ...blocked.map(t=>[t,"Blocked",C.redDark]),
+                   ...soon.filter(t=>!overdue.includes(t)).map(t=>[t,"Due "+fmtDate(t.due),C.orange])]
+                  .slice(0,10);
+  if(!flagged.length){ list.appendChild(el("div","cah-empty","Nothing flagged. Clear skies.")); }
+  flagged.forEach(([t,tag,col])=>{
+    const row = el("button","cah-mini-row");
+    row.innerHTML = `<span class="cah-dot" style="background:${col}"></span>
+      <span class="cah-mini-task">${esc(t.task)}</span>
+      <span class="cah-mini-person">${esc(t.person||"—")}</span>
+      <span class="cah-mini-tag" style="color:${col}">${tag}</span>`;
+    row.onclick = ()=>openTaskModal(t.id);
+    list.appendChild(row);
+  });
+  attention.appendChild(list);
+  grid.appendChild(attention);
+
+  const side = el("div","cah-dash-side");
+
+  // announcements
+  const ann = el("div","cah-card");
+  ann.appendChild(cardHead("Announcements", null, ()=>{
+    const msg = prompt("New announcement / update:");
+    if(msg){ DATA.announcements.unshift({id:"A"+Date.now(),msg,date:"2026-08-17"}); persist(); renderView(); }
+  }, "+ Add"));
+  const al = el("div","cah-ann-list");
+  if(!DATA.announcements.length) al.appendChild(el("div","cah-empty","No announcements yet."));
+  DATA.announcements.slice(0,5).forEach(a=>{
+    const r = el("div","cah-ann-row");
+    r.innerHTML = `<div class="cah-ann-msg">${esc(a.msg)}</div><div class="cah-ann-date">${fmtDate(a.date)}</div>`;
+    const del = el("button","cah-x","×"); del.title="Remove";
+    del.onclick=()=>{DATA.announcements=DATA.announcements.filter(x=>x.id!==a.id);persist();renderView();};
+    r.appendChild(del);
+    al.appendChild(r);
+  });
+  ann.appendChild(al);
+  side.appendChild(ann);
+
+  // quick links (editable)
+  const ql = el("div","cah-card");
+  ql.appendChild(cardHead("Quick links", null, ()=>openQuickLinkModal(null), "+ Add"));
+  const qll = el("div","cah-ql-list");
+  if(!DATA.quickLinks.length) qll.appendChild(el("div","cah-empty","No quick links yet. Add the ones your team opens most."));
+  DATA.quickLinks.forEach(q=>{
+    const rowEl = el("div","cah-ql-row");
+    const a = el("a","cah-ql"); a.href=q.url; a.target="_blank"; a.rel="noopener";
+    a.innerHTML = `${icon('note')}<span>${esc(q.label)}</span>`;
+    rowEl.appendChild(a);
+    const edit = el("button","cah-ql-edit","Edit"); edit.title="Edit link";
+    edit.onclick=()=>openQuickLinkModal(q.id);
+    rowEl.appendChild(edit);
+    qll.appendChild(rowEl);
+  });
+  ql.appendChild(qll);
+  side.appendChild(ql);
+
+  grid.appendChild(side);
+  v.appendChild(grid);
+}
+
+function cardHead(title, sub, action, actionLabel){
+  const h = el("div","cah-card-head");
+  h.innerHTML = `<h3>${esc(title)}</h3>${sub?`<span class="cah-card-sub">${esc(sub)}</span>`:""}`;
+  if(action){ const b=el("button","cah-card-action",actionLabel||"+"); b.onclick=action; h.appendChild(b); }
+  return h;
+}
+
+/* ---------- AGENDA INFOGRAPHIC ---------- */
+const AG_TYPE = {
+  plenary:{c:"var(--blue)", label:"Plenary + parallel"},
+  parallel:{c:"var(--green)", label:"Parallel tracks"},
+  special:{c:"var(--orange)", label:"Special / keynote"},
+  break:{c:"#c3ccd4", label:"Break / networking"}
+};
+function buildAgendaInfographic(){
+  const card = el("div","cah-card cah-agenda-card");
+  const head = el("div","cah-card-head");
+  head.innerHTML = `<h3>Agenda at a glance</h3><span class="cah-card-sub">Two days · two tracks · India Habitat Centre</span>`;
+  const edit = el("button","cah-card-action","Edit agenda"); edit.onclick=()=>openAgendaEditor();
+  head.appendChild(edit);
+  card.appendChild(head);
+
+  // legend
+  const legend = el("div","cah-ag-legend");
+  Object.keys(AG_TYPE).forEach(k=>{
+    const s = el("span","cah-ag-leg");
+    s.innerHTML = `<i style="background:${AG_TYPE[k].c}"></i>${AG_TYPE[k].label}`;
+    legend.appendChild(s);
+  });
+  card.appendChild(legend);
+
+  const cols = el("div","cah-ag-days");
+  [["1","Day 1","7 Sep"],["2","Day 2","8 Sep"]].forEach(([day,label,date])=>{
+    const col = el("div","cah-ag-day");
+    const dh = el("div","cah-ag-dayhead");
+    dh.innerHTML = `<span class="cah-ag-daynum">${label}</span><span class="cah-ag-daydate">${date}</span>`;
+    col.appendChild(dh);
+    const rows = DATA.agenda.filter(a=>a.day===day);
+    rows.forEach(a=>{
+      const t = AG_TYPE[a.type]||AG_TYPE.plenary;
+      const row = el("div","cah-ag-row"+(a.type==="break"?" brk":""));
+      row.style.setProperty("--agc", t.c);
+      const twin = a.b && a.type!=="break";
+      row.innerHTML = `
+        <div class="cah-ag-time">${esc(a.time)}</div>
+        <div class="cah-ag-slot">
+          <div class="cah-ag-a">${esc(a.a)}</div>
+          ${twin?`<div class="cah-ag-b"><span class="cah-ag-track">Magnolia</span>${esc(a.b)}</div>`:""}
+        </div>`;
+      col.appendChild(row);
+    });
+    cols.appendChild(col);
+  });
+  card.appendChild(cols);
+  return card;
+}
+
+function openAgendaEditor(){
+  const ov=el("div","cah-modal-ov"); const m=el("div","cah-modal cah-modal-wide");
+  m.innerHTML=`<div class="cah-modal-head"><h2>Edit agenda</h2><button class="cah-modal-x">×</button></div>`;
+  const body=el("div","cah-modal-body");
+  const note=el("p","cah-modal-note","Edit any cell inline. Track A is Silver Oak; Track B is Magnolia (leave blank for full-width sessions). Changes save automatically.");
+  body.appendChild(note);
+  ["1","2"].forEach(day=>{
+    const h=el("div","cah-day-head", day==="1"?"Day 1 — 7 September":"Day 2 — 8 September"); body.appendChild(h);
+    const tbl=el("table","cah-edit-table");
+    tbl.innerHTML=`<thead><tr><th style="width:96px">Time</th><th>Silver Oak</th><th>Magnolia</th><th style="width:110px">Type</th><th></th></tr></thead>`;
+    const tb=el("tbody");
+    DATA.agenda.filter(a=>a.day===day).forEach(a=>{
+      const tr=el("tr");
+      const mk=(key,w)=>{const td=el("td");const inp=el("input");inp.value=a[key]||"";inp.oninput=()=>{a[key]=inp.value;persist();};if(w)inp.style.width=w;td.appendChild(inp);return td;};
+      tr.appendChild(mk("time"));
+      tr.appendChild(mk("a"));
+      tr.appendChild(mk("b"));
+      const tsel=el("td");const s=el("select");["plenary","parallel","special","break"].forEach(o=>{const op=el("option",null,o);if(a.type===o)op.selected=true;s.appendChild(op);});s.onchange=()=>{a.type=s.value;persist();};tsel.appendChild(s);tr.appendChild(tsel);
+      const del=el("td");const b=el("button","cah-x","×");b.onclick=()=>{DATA.agenda=DATA.agenda.filter(x=>x.id!==a.id);persist();ov.remove();openAgendaEditor();};del.appendChild(b);tr.appendChild(del);
+      tb.appendChild(tr);
+    });
+    tbl.appendChild(tb); body.appendChild(tbl);
+    const add=el("button","cah-btn cah-btn-ghost cah-add-row","+ Add slot to Day "+day);
+    add.onclick=()=>{DATA.agenda.push({id:"AG"+Date.now(),day,time:"",a:"",b:"",type:"plenary"});persist();ov.remove();openAgendaEditor();};
+    body.appendChild(add);
+  });
+  m.appendChild(body);
+  const foot=el("div","cah-modal-foot"); const sp=el("div");sp.style.flex="1";foot.appendChild(sp);
+  const done=el("button","cah-btn cah-btn-primary","Done"); done.onclick=()=>{ov.remove();renderView();}; foot.appendChild(done);
+  m.appendChild(foot);
+  m.querySelector(".cah-modal-x").onclick=()=>{ov.remove();renderView();};
+  ov.onclick=e=>{if(e.target===ov){ov.remove();renderView();}};
+  ov.appendChild(m); document.body.appendChild(ov);
+}
+
+function openQuickLinkModal(id){
+  const q = id? DATA.quickLinks.find(x=>x.id===id) : {id:"Q"+Date.now(),label:"",url:""};
+  const isNew=!id;
+  const ov=el("div","cah-modal-ov"); const m=el("div","cah-modal cah-modal-sm");
+  m.innerHTML=`<div class="cah-modal-head"><h2>${isNew?"Add quick link":"Edit quick link"}</h2><button class="cah-modal-x">×</button></div>`;
+  const body=el("div","cah-modal-body");
+  const f=(label,key)=>{const w=el("label","cah-field");w.appendChild(el("span",null,label));const i=el("input");i.value=q[key]||"";i.dataset.key=key;w.appendChild(i);return w;};
+  body.appendChild(f("Label","label"));
+  body.appendChild(f("URL","url"));
+  m.appendChild(body);
+  const foot=el("div","cah-modal-foot");
+  if(!isNew){const del=el("button","cah-btn cah-btn-danger","Remove");del.onclick=()=>{DATA.quickLinks=DATA.quickLinks.filter(x=>x.id!==q.id);persist();ov.remove();renderView();};foot.appendChild(del);}
+  const sp=el("div");sp.style.flex="1";foot.appendChild(sp);
+  const c=el("button","cah-btn cah-btn-ghost","Cancel");c.onclick=()=>ov.remove();foot.appendChild(c);
+  const s=el("button","cah-btn cah-btn-primary",isNew?"Add":"Save");
+  s.onclick=()=>{m.querySelectorAll("[data-key]").forEach(i=>{q[i.dataset.key]=i.value.trim();});if(!q.label){flash("Label required");return;}if(q.url&&!/^https?:\/\//.test(q.url))q.url="https://"+q.url;if(isNew)DATA.quickLinks.push(q);persist();ov.remove();renderView();flash("Saved");};
+  foot.appendChild(s); m.appendChild(foot);
+  m.querySelector(".cah-modal-x").onclick=()=>ov.remove();
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  ov.appendChild(m); document.body.appendChild(ov);
+}
+
+/* ---------- TASK TRACKER ---------- */
+let TASK_QUICK = "all";
+function applyQuickFilter(k){ TASK_QUICK=k; const s=$("#cah-quick-"+k); if(s){document.querySelectorAll(".cah-chip").forEach(c=>c.classList.remove("on"));s.classList.add("on");} renderTaskTable(); }
+
+function viewTasks(v){
+  const bar = el("div","cah-chipbar");
+  const chips = [["all","All"],["mine","Lens: person"],["soon","Due this week"],["overdue","Overdue"],
+    ["blocked","Blocked"],["awaiting","Awaiting input"],["open","Open"],["completed","Completed"]];
+  chips.forEach(([k,l])=>{
+    const c = el("button","cah-chip"+(TASK_QUICK===k?" on":"")); c.id="cah-quick-"+k; c.textContent=l;
+    c.onclick=()=>{TASK_QUICK=k; document.querySelectorAll(".cah-chip").forEach(x=>x.classList.remove("on"));c.classList.add("on"); renderTaskTable();};
+    bar.appendChild(c);
+  });
+  const search = el("input","cah-search"); search.placeholder="Search tasks…"; search.id="cah-tsearch";
+  search.oninput = ()=>renderTaskTable();
+  bar.appendChild(search);
+  v.appendChild(bar);
+  const wrap = el("div","cah-table-wrap"); wrap.id="cah-task-table";
+  v.appendChild(wrap);
+  renderTaskTable();
+}
+
+function filteredTasks(){
+  let ts = DATA.tasks.slice();
+  const q = ($("#cah-tsearch")?.value||"").toLowerCase();
+  if(q) ts = ts.filter(t=>(t.task+t.person+t.workstream+t.notes+t.coord).toLowerCase().includes(q));
+  if(FILTER_PERSON) ts = ts.filter(t=>taskMatchesPerson(t,FILTER_PERSON));
+  switch(TASK_QUICK){
+    case "mine": if(FILTER_PERSON) ts=ts.filter(t=>taskMatchesPerson(t,FILTER_PERSON)); break;
+    case "soon": ts=ts.filter(t=>{const d=daysBetween(t.due);return isOpen(t)&&d!=null&&d>=0&&d<=7;}); break;
+    case "overdue": ts=ts.filter(t=>{const d=daysBetween(t.due);return isOpen(t)&&d!=null&&d<0;}); break;
+    case "blocked": ts=ts.filter(t=>t.status==="Blocked"); break;
+    case "awaiting": ts=ts.filter(t=>t.status==="Awaiting input"||t.status==="Under review"); break;
+    case "open": ts=ts.filter(isOpen); break;
+    case "completed": ts=ts.filter(t=>t.status==="Completed"); break;
+  }
+  return ts;
+}
+
+function renderTaskTable(){
+  const wrap = $("#cah-task-table"); if(!wrap) return;
+  const ts = filteredTasks();
+  const tbl = el("table","cah-table");
+  tbl.innerHTML = `<thead><tr>
+    <th>Task</th><th>Workstream</th><th>Responsible</th><th>Priority</th>
+    <th>Status</th><th>Due</th><th>Left</th><th>Link</th></tr></thead>`;
+  const tb = el("tbody");
+  if(!ts.length){ const tr=el("tr"); const td=el("td"); td.colSpan=8; td.className="cah-empty"; td.textContent="No tasks match."; tr.appendChild(td); tb.appendChild(tr); }
+  ts.forEach(t=>{
+    const tr = el("tr","cah-trow");
+    const left = daysBetween(t.due);
+    const leftTxt = left==null?"—":(left<0?`${Math.abs(left)}d over`:`${left}d`);
+    const leftCls = left==null?"":(left<0&&isOpen(t)?"cah-neg":(left<=3&&isOpen(t)?"cah-warn":""));
+    tr.innerHTML = `
+      <td class="cah-td-task">${esc(t.task)}${t.notes?`<span class="cah-td-note">${esc(t.notes)}</span>`:""}</td>
+      <td><span class="cah-ws-pill">${esc(t.workstream)}</span></td>
+      <td>${esc(t.person||"—")}${t.coord?`<span class="cah-td-note">w/ ${esc(t.coord)}</span>`:""}</td>
+      <td><span class="cah-prio" style="--pc:${PRIORITY_COLOR[t.priority]||C.grey}">${esc(t.priority||"—")}</span></td>
+      <td><span class="cah-status" style="--sc:${STATUS_COLOR[t.status]||C.grey}">${esc(t.status)}</span></td>
+      <td>${fmtDate(t.due)}</td>
+      <td class="${leftCls}">${leftTxt}</td>
+      <td>${t.link?`<a href="${t.link}" target="_blank" rel="noopener" class="cah-link-ic" title="${esc(t.linkName||'Open')}">${icon('note')}</a>`:"—"}</td>`;
+    tr.onclick = (e)=>{ if(e.target.closest("a"))return; openTaskModal(t.id); };
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);
+  wrap.innerHTML = `<div class="cah-table-count">${ts.length} task${ts.length===1?"":"s"}</div>`;
+  wrap.appendChild(tbl);
+}
+
+/* ---------- WORKSTREAMS ---------- */
+function viewWorkstreams(v){
+  const grid = el("div","cah-ws-grid");
+  WORKSTREAMS.forEach(ws=>{
+    let ts = DATA.tasks.filter(t=>t.workstream===ws);
+    if(FILTER_PERSON) ts=ts.filter(t=>taskMatchesPerson(t,FILTER_PERSON));
+    if(!ts.length && FILTER_PERSON) return;
+    const done = ts.filter(t=>t.status==="Completed").length;
+    const total = ts.filter(t=>t.status!=="Not required").length;
+    const pct = total? Math.round(done/total*100):0;
+    const card = el("div","cah-ws-card");
+    const head = el("div","cah-ws-head");
+    head.innerHTML = `<h3>${esc(ws)}</h3><span class="cah-ws-pct">${pct}%</span>`;
+    card.appendChild(head);
+    const track = el("div","cah-prog-track cah-slim"); track.innerHTML=`<div class="cah-prog-fill" style="width:${pct}%"></div>`;
+    card.appendChild(track);
+    const list = el("div","cah-ws-tasks");
+    ts.sort((a,b)=> (isOpen(b)-isOpen(a)));
+    ts.forEach(t=>{
+      const r = el("button","cah-ws-task");
+      r.innerHTML = `<span class="cah-status-dot" style="background:${STATUS_COLOR[t.status]}"></span>
+        <span class="cah-ws-task-name ${t.status==='Completed'?'done':''}">${esc(t.task)}</span>
+        <span class="cah-ws-task-p">${esc(splitNames(t.person)[0]||"—")}</span>`;
+      r.onclick=()=>openTaskModal(t.id);
+      list.appendChild(r);
+    });
+    card.appendChild(list);
+    grid.appendChild(card);
+  });
+  v.appendChild(grid);
+}
+
+/* ---------- DEPENDENCIES ---------- */
+function viewDependencies(v){
+  const intro = el("div","cah-dep-intro");
+  intro.innerHTML = `Tasks that are blocked or waiting on someone. Use the <b>Lens</b> (top right) to see everything waiting on a specific person.`;
+  v.appendChild(intro);
+
+  const blocked = DATA.tasks.filter(t=>(t.status==="Blocked"||t.status==="Awaiting input"||t.status==="Under review"||t.dependency) && isOpen(t))
+                            .filter(t=>taskMatchesPerson(t,FILTER_PERSON) || !FILTER_PERSON);
+  if(!blocked.length){ v.appendChild(el("div","cah-empty","No open dependencies. Nothing is waiting.")); return; }
+
+  const list = el("div","cah-dep-list");
+  blocked.forEach(t=>{
+    const card = el("div","cah-dep-card"); card.style.setProperty("--dc",STATUS_COLOR[t.status]||C.orange);
+    card.innerHTML = `
+      <div class="cah-dep-top">
+        <span class="cah-status" style="--sc:${STATUS_COLOR[t.status]}">${esc(t.status)}</span>
+        <span class="cah-dep-prio" style="color:${PRIORITY_COLOR[t.priority]}">${esc(t.priority||"")}</span>
+      </div>
+      <div class="cah-dep-task">${esc(t.task)}</div>
+      <div class="cah-dep-chain">
+        <span class="cah-dep-node">${esc(t.person||"—")}</span>
+        <span class="cah-dep-arrow">needs</span>
+        <span class="cah-dep-node hl">${esc(t.dependency||t.coord||"input")}</span>
+      </div>
+      ${t.notes?`<div class="cah-dep-note">${esc(t.notes)}</div>`:""}`;
+    card.onclick=()=>openTaskModal(t.id);
+    list.appendChild(card);
+  });
+  v.appendChild(list);
+}
+
+/* ---------- PEOPLE ---------- */
+function viewPeople(v){
+  const roster = DATA.people.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  const withTasks = roster.filter(p=>DATA.tasks.some(t=>nameInText(p.name,t.person)||nameInText(p.name,t.coord)));
+  const head = el("div","cah-people-bar");
+  head.innerHTML = `<div class="cah-people-intro">Full CAH 2026 team — <b>${roster.length}</b> people · ${withTasks.length} currently carrying event tasks. Use <b>See all</b> or the Lens to focus on one person.</div>`;
+  const addBtn = el("button","cah-btn cah-btn-primary","+ Add team member");
+  addBtn.onclick=()=>openPersonModal(null);
+  head.appendChild(addBtn);
+  v.appendChild(head);
+  const grid = el("div","cah-people-grid");
+  roster.forEach(p=>{
+    const name = p.name;
+    const assigned = DATA.tasks.filter(t=>nameInText(name,t.person) && isOpen(t));
+    const supporting = DATA.tasks.filter(t=>nameInText(name,t.coord) && isOpen(t));
+    const overdue = assigned.filter(t=>{const d=daysBetween(t.due);return d!=null&&d<0;}).length;
+    const card = el("div","cah-person-card"+(assigned.length||supporting.length?"":" cah-person-idle"));
+    const initials = name.split(" ").filter(Boolean).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+    card.innerHTML = `
+      <button class="cah-person-editx" title="Edit">${icon('note')}</button>
+      <div class="cah-person-head">
+        <span class="cah-avatar">${initials}</span>
+        <div class="cah-person-id">
+          <div class="cah-person-name">${esc(name)}${p.role&&p.role.indexOf('Manager')===0?'<span class="cah-role-pill">Manager</span>':''}${p.role.indexOf('external')>-1?'<span class="cah-role-pill ext">External</span>':''}</div>
+          ${p.eventRole?`<div class="cah-person-role">${esc(p.eventRole)}</div>`:""}
+          ${p.email?`<a class="cah-person-email" href="mailto:${esc(p.email)}">${esc(p.email)}</a>`:'<span class="cah-person-email cah-noemail">No email yet</span>'}
+        </div>
+      </div>
+      <div class="cah-person-stats">
+        <span><b>${assigned.length}</b> open</span>
+        <span><b>${supporting.length}</b> supporting</span>
+        ${overdue?`<span class="cah-neg"><b>${overdue}</b> overdue</span>`:""}
+      </div>`;
+    card.querySelector(".cah-person-editx").onclick=(e)=>{e.stopPropagation();openPersonModal(p.id);};
+    const tl = el("div","cah-person-tasks");
+    assigned.slice(0,5).forEach(t=>{
+      const r=el("button","cah-person-task");
+      r.innerHTML=`<span class="cah-status-dot" style="background:${STATUS_COLOR[t.status]}"></span>${esc(t.task)}`;
+      r.onclick=()=>openTaskModal(t.id); tl.appendChild(r);
+    });
+    if(assigned.length>5) tl.appendChild(el("div","cah-person-more","+"+(assigned.length-5)+" more open"));
+    if(!assigned.length && supporting.length) tl.appendChild(el("div","cah-person-more",supporting.length+" supporting task"+(supporting.length>1?"s":"")));
+    if(!assigned.length && !supporting.length) tl.appendChild(el("div","cah-empty","No event tasks yet."));
+    card.appendChild(tl);
+    const btn = el("button","cah-person-lens","See all for "+name.split(" ")[0]);
+    btn.onclick=()=>{FILTER_PERSON=name; VIEW="tasks"; TASK_QUICK="all"; render();};
+    card.appendChild(btn);
+    grid.appendChild(card);
+  });
+  v.appendChild(grid);
+}
+
+function openPersonModal(id){
+  const p = id? DATA.people.find(x=>x.id===id) : {id:"P"+Date.now(),name:"",email:"",aliases:[],role:"Member",eventRole:""};
+  const isNew=!id;
+  const ov=el("div","cah-modal-ov"); const m=el("div","cah-modal cah-modal-sm");
+  m.innerHTML=`<div class="cah-modal-head"><h2>${isNew?"Add team member":"Edit team member"}</h2><button class="cah-modal-x">×</button></div>`;
+  const body=el("div","cah-modal-body");
+  const f=(label,key,val)=>{const w=el("label","cah-field");w.appendChild(el("span",null,label));const i=el("input");i.value=val!=null?val:(p[key]||"");i.dataset.key=key;w.appendChild(i);return w;};
+  const g=el("div","cah-modal-grid");
+  g.appendChild(f("Full name","name"));
+  g.appendChild(f("Email","email"));
+  g.appendChild(f("Event role","eventRole"));
+  g.appendChild(f("Org role","role"));
+  body.appendChild(g);
+  body.appendChild(f("Short names / aliases used in the task sheet (comma-separated)","aliasStr",(p.aliases||[]).join(", ")));
+  m.appendChild(body);
+  const foot=el("div","cah-modal-foot");
+  if(!isNew){const del=el("button","cah-btn cah-btn-danger","Remove");del.onclick=()=>{if(confirm("Remove "+p.name+" from the roster?")){DATA.people=DATA.people.filter(x=>x.id!==p.id);persist();ov.remove();renderView();}};foot.appendChild(del);}
+  const sp=el("div");sp.style.flex="1";foot.appendChild(sp);
+  const c=el("button","cah-btn cah-btn-ghost","Cancel");c.onclick=()=>ov.remove();foot.appendChild(c);
+  const s=el("button","cah-btn cah-btn-primary",isNew?"Add":"Save");
+  s.onclick=()=>{
+    const vals={}; m.querySelectorAll("[data-key]").forEach(i=>{vals[i.dataset.key]=i.value.trim();});
+    if(!vals.name){flash("Name required");return;}
+    p.name=vals.name; p.email=vals.email; p.eventRole=vals.eventRole; p.role=vals.role||"Member";
+    let al=(vals.aliasStr||"").split(",").map(x=>x.trim()).filter(Boolean);
+    if(!al.length) al=[vals.name, vals.name.split(" ")[0]].filter((x,i,a)=>a.indexOf(x)===i);
+    p.aliases=al;
+    if(isNew) DATA.people.push(p);
+    persist(); ov.remove(); renderView(); flash("Saved");
+  };
+  foot.appendChild(s); m.appendChild(foot);
+  m.querySelector(".cah-modal-x").onclick=()=>ov.remove();
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  ov.appendChild(m); document.body.appendChild(ov);
+}
+
+/* ---------- SESSIONS ---------- */
+function viewSessions(v){
+  if(!DATA.sessions || !DATA.sessions.length){ DATA.sessions = SESSIONS.map(s=>({...s})); persist(); }
+  const bar = el("div","cah-people-bar");
+  bar.innerHTML = `<div class="cah-people-intro">Point-of-contact and bio owner for every session, both days. Click a name field to reassign; changes save automatically.</div>`;
+  v.appendChild(bar);
+  [["1","Day 1 — 7 September"],["2","Day 2 — 8 September"]].forEach(([day,label])=>{
+    const h = el("div","cah-day-head",label); v.appendChild(h);
+    const tbl = el("table","cah-table cah-sess-table");
+    tbl.innerHTML = `<thead><tr><th>Session</th><th>Point of contact</th><th>Bio owner</th></tr></thead>`;
+    const tb = el("tbody");
+    DATA.sessions.filter(s=>s.day===day).forEach(s=>{
+      const tr = el("tr");
+      const hl = FILTER_PERSON && (nameInText(FILTER_PERSON,s.poc)||nameInText(FILTER_PERSON,s.bio));
+      if(hl) tr.className="cah-hl-row";
+      const tdTitle = el("td","cah-td-task"); tdTitle.textContent=s.title;
+      const tdPoc = el("td"); tdPoc.appendChild(personPicker(s.poc, val=>{s.poc=val;persist();}));
+      const tdBio = el("td"); tdBio.appendChild(personPicker(s.bio==="—"?"":s.bio, val=>{s.bio=val;persist();}));
+      tr.appendChild(tdTitle); tr.appendChild(tdPoc); tr.appendChild(tdBio);
+      tb.appendChild(tr);
+    });
+    tbl.appendChild(tb); v.appendChild(tbl);
+  });
+}
+
+/* ---------- TIMELINE ---------- */
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function viewTimeline(v){
+  let dated = DATA.tasks.filter(t=>t.due).slice().sort((a,b)=>a.due<b.due?-1:1);
+  if(FILTER_PERSON) dated = dated.filter(t=>taskMatchesPerson(t,FILTER_PERSON));
+  const undated = DATA.tasks.filter(t=>!t.due && isOpen(t) && (!FILTER_PERSON||taskMatchesPerson(t,FILTER_PERSON)));
+
+  // summary strip
+  const past = dated.filter(t=>daysBetween(t.due)<0 && isOpen(t)).length;
+  const strip = el("div","cah-tl-summary");
+  strip.innerHTML = `
+    <div class="cah-tl-sum"><b>${countdown()}</b><span>days to event</span></div>
+    <div class="cah-tl-sum"><b>${dated.length}</b><span>dated milestones</span></div>
+    <div class="cah-tl-sum ${past?'warn':''}"><b>${past}</b><span>overdue & open</span></div>
+    <div class="cah-tl-sum"><b>${undated.length}</b><span>open, no date</span></div>`;
+  v.appendChild(strip);
+  if(FILTER_PERSON){ const l=el("div","cah-tl-lens","Filtered to "+FILTER_PERSON+" · clear the Lens to see all"); v.appendChild(l); }
+
+  const groups = {}; dated.forEach(t=>{ (groups[t.due]=groups[t.due]||[]).push(t); });
+  const line = el("div","cah-timeline");
+  let lastMonth="";
+  const insertEventAfter = ()=>{}; // event added at correct chronological point below
+  const keys = Object.keys(groups).sort();
+  const evISO = EVENT.startISO;
+  let eventPlaced=false;
+  function placeEvent(){
+    if(eventPlaced) return; eventPlaced=true;
+    const ev = el("div","cah-tl-node cah-tl-event");
+    ev.innerHTML = `<div class="cah-tl-marker event"></div>
+      <div class="cah-tl-date"><b>${EVENT.dates}</b> <span class="cah-tl-rel">${countdown()}d</span></div>
+      <div class="cah-tl-items"><div class="cah-tl-eventlbl">🎈 Clean Air Horizons 2026 — ${EVENT.venue}</div></div>`;
+    line.appendChild(ev);
+  }
+  keys.forEach(due=>{
+    if(due>evISO) placeEvent();
+    const d = daysBetween(due);
+    const mo = MONTHS[new Date(due+"T00:00:00").getMonth()]+" "+new Date(due+"T00:00:00").getFullYear();
+    if(mo!==lastMonth){ lastMonth=mo; const band=el("div","cah-tl-month",mo); line.appendChild(band); }
+    const node = el("div","cah-tl-node");
+    const near = d!=null && d>=0 && d<=14;
+    const openCount = groups[due].filter(isOpen).length;
+    node.innerHTML = `<div class="cah-tl-marker ${d<0?'past':''} ${near?'near':''}"></div>
+      <div class="cah-tl-date">${fmtDate(due)}${d!=null?` <span class="cah-tl-rel">${d<0?Math.abs(d)+'d ago':'in '+d+'d'}</span>`:""}</div>`;
+    const items = el("div","cah-tl-items");
+    groups[due].forEach(t=>{
+      const it = el("button","cah-tl-item"); it.style.setProperty("--stc",STATUS_COLOR[t.status]||C.grey);
+      it.innerHTML = `<span class="cah-status-dot" style="background:${STATUS_COLOR[t.status]}"></span>
+        <span class="cah-tl-name">${esc(t.task)}</span>
+        <span class="cah-ws-pill sm">${esc(t.workstream)}</span>
+        <span class="cah-tl-person">${esc(splitNames(t.person)[0]||"—")}</span>`;
+      it.onclick=()=>openTaskModal(t.id);
+      items.appendChild(it);
+    });
+    node.appendChild(items);
+    line.appendChild(node);
+  });
+  placeEvent();
+  v.appendChild(line);
+
+  if(undated.length){
+    const card=el("div","cah-card"); card.style.marginTop="18px";
+    card.appendChild(cardHead("Open tasks without a due date", undated.length+" to schedule"));
+    const list=el("div","cah-mini-list");
+    undated.forEach(t=>{
+      const row=el("button","cah-mini-row");
+      row.innerHTML=`<span class="cah-dot" style="background:${STATUS_COLOR[t.status]}"></span>
+        <span class="cah-mini-task">${esc(t.task)}</span>
+        <span class="cah-mini-person">${esc(splitNames(t.person)[0]||"—")}</span>
+        <span class="cah-mini-tag" style="color:var(--blue)">Set date</span>`;
+      row.onclick=()=>openTaskModal(t.id);
+      list.appendChild(row);
+    });
+    card.appendChild(list); v.appendChild(card);
+  }
+}
+
+/* ---------- RESOURCES ---------- */
+function viewResources(v){
+  const bar = el("div","cah-chipbar");
+  const search = el("input","cah-search"); search.placeholder="Search resources…"; search.id="cah-rsearch";
+  search.oninput=()=>renderResources();
+  bar.appendChild(search);
+  const add = el("button","cah-btn cah-btn-ghost","+ Add resource");
+  add.onclick=()=>openResourceModal(null);
+  bar.appendChild(add);
+  v.appendChild(bar);
+  const wrap = el("div"); wrap.id="cah-res-wrap"; v.appendChild(wrap);
+  renderResources();
+}
+function renderResources(){
+  const wrap = $("#cah-res-wrap"); if(!wrap) return; wrap.innerHTML="";
+  const q = ($("#cah-rsearch")?.value||"").toLowerCase();
+  const byWs = {};
+  DATA.resources.filter(r=>!q||(r.name+r.desc+r.type).toLowerCase().includes(q))
+    .forEach(r=>{ (byWs[r.workstream]=byWs[r.workstream]||[]).push(r); });
+  Object.keys(byWs).sort().forEach(ws=>{
+    const sec = el("div","cah-res-sec");
+    sec.appendChild(el("div","cah-res-secttl",ws));
+    const g = el("div","cah-res-grid");
+    byWs[ws].forEach(r=>{
+      const card = el("div","cah-res-card");
+      card.innerHTML = `
+        <div class="cah-res-top"><span class="cah-res-type">${esc(r.type)}</span>
+        <span class="cah-res-status ${r.status==='Final'?'final':''}">${esc(r.status)}</span></div>
+        <div class="cah-res-name">${esc(r.name)}</div>
+        <div class="cah-res-desc">${esc(r.desc)}</div>
+        <div class="cah-res-foot">
+          ${r.link?`<a href="${r.link}" target="_blank" rel="noopener" class="cah-res-open">Open ↗</a>`:`<span class="cah-res-nolink">No link yet</span>`}
+          <button class="cah-res-edit">Edit</button>
+        </div>`;
+      card.querySelector(".cah-res-edit").onclick=()=>openResourceModal(r.id);
+      g.appendChild(card);
+    });
+    sec.appendChild(g);
+    wrap.appendChild(sec);
+  });
+  if(!wrap.children.length) wrap.appendChild(el("div","cah-empty","No resources match."));
+}
+
+/* ---------- NOTES ---------- */
+function viewNotes(v){
+  const add = el("button","cah-btn cah-btn-primary","+ Add note / decision");
+  add.onclick=()=>{
+    const title=prompt("Title (e.g. Weekly sync, 20 Aug):"); if(!title)return;
+    const body=prompt("Notes / decisions:")||"";
+    DATA.notes.unshift({id:"N"+Date.now(),title,body,date:"2026-08-17"}); persist(); renderView();
+  };
+  v.appendChild(add);
+  const list = el("div","cah-notes-list");
+  if(!DATA.notes.length) list.appendChild(el("div","cah-empty","No meeting notes yet. Add decisions here to keep one record."));
+  DATA.notes.forEach(n=>{
+    const card = el("div","cah-note-card");
+    card.innerHTML = `<div class="cah-note-head"><b>${esc(n.title)}</b><span>${fmtDate(n.date)}</span></div>
+      <div class="cah-note-body">${esc(n.body).replace(/\n/g,"<br>")}</div>`;
+    const del=el("button","cah-x","×"); del.onclick=()=>{DATA.notes=DATA.notes.filter(x=>x.id!==n.id);persist();renderView();};
+    card.querySelector(".cah-note-head").appendChild(del);
+    list.appendChild(card);
+  });
+  v.appendChild(list);
+}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+function openTaskModal(id){
+  const t = id? DATA.tasks.find(x=>x.id===id) : {id:"T"+Date.now(),task:"",workstream:WORKSTREAMS[0],person:"",coord:"",dependency:"",priority:"Medium",status:"Not started",start:"",due:"",link:"",linkName:"",notes:"",updated:"2026-08-17"};
+  const isNew = !id;
+  const ov = el("div","cah-modal-ov");
+  const m = el("div","cah-modal");
+  m.innerHTML = `<div class="cah-modal-head"><h2>${isNew?"Add task":"Edit task"}</h2><button class="cah-modal-x">×</button></div>`;
+  const body = el("div","cah-modal-body");
+  function field(label,key,type="text",opts){
+    const wrap=el("label","cah-field"); wrap.appendChild(el("span",null,label));
+    let inp;
+    if(type==="select"){ inp=el("select"); opts.forEach(o=>{const op=el("option",null,o);if(t[key]===o)op.selected=true;inp.appendChild(op);}); }
+    else if(type==="textarea"){ inp=el("textarea"); inp.value=t[key]||""; }
+    else { inp=el("input"); inp.type=type; inp.value=t[key]||""; }
+    inp.dataset.key=key; wrap.appendChild(inp); return wrap;
+  }
+  function pickerField(label,key){
+    const wrap=el("div","cah-field"); wrap.appendChild(el("span",null,label));
+    wrap.appendChild(personPicker(t[key]||"", val=>{ t[key]=val; }));
+    return wrap;
+  }
+  const g = el("div","cah-modal-grid");
+  g.appendChild(field("Task / activity","task"));
+  g.appendChild(field("Workstream","workstream","select",WORKSTREAMS));
+  g.appendChild(pickerField("Person responsible","person"));
+  g.appendChild(pickerField("Supporting / coordinate with","coord"));
+  g.appendChild(field("Dependent upon (task or person)","dependency"));
+  g.appendChild(field("Priority","priority","select",["High","Medium","Low"]));
+  g.appendChild(field("Status","status","select",STATUSES));
+  g.appendChild(field("Due date","due","date"));
+  g.appendChild(field("Link (URL)","link"));
+  g.appendChild(field("Link label","linkName"));
+  body.appendChild(g);
+  body.appendChild(field("Comments / notes & next action","notes","textarea"));
+  m.appendChild(body);
+  const foot = el("div","cah-modal-foot");
+  if(!isNew){ const del=el("button","cah-btn cah-btn-danger","Delete"); del.onclick=()=>{ if(confirm("Delete this task?")){DATA.tasks=DATA.tasks.filter(x=>x.id!==t.id);persist();ov.remove();renderView();flash("Task deleted");}}; foot.appendChild(del); }
+  const spacer=el("div"); spacer.style.flex="1"; foot.appendChild(spacer);
+  const cancel=el("button","cah-btn cah-btn-ghost","Cancel"); cancel.onclick=()=>ov.remove(); foot.appendChild(cancel);
+  const save=el("button","cah-btn cah-btn-primary",isNew?"Add task":"Save"); 
+  save.onclick=()=>{
+    m.querySelectorAll("[data-key]").forEach(inp=>{ t[inp.dataset.key]=inp.value; });
+    t.updated="2026-08-17";
+    if(!t.task.trim()){ flash("Task needs a name"); return; }
+    if(isNew) DATA.tasks.push(t);
+    persist(); ov.remove(); renderView(); flash(isNew?"Task added":"Saved");
+  };
+  foot.appendChild(save);
+  m.appendChild(foot);
+  m.querySelector(".cah-modal-x").onclick=()=>ov.remove();
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  ov.appendChild(m); document.body.appendChild(ov);
+}
+
+function openResourceModal(id){
+  const r = id? DATA.resources.find(x=>x.id===id) : {id:"R"+Date.now(),name:"",type:"Working document",workstream:WORKSTREAMS[0],desc:"",link:"",status:"Working",updated:"2026-08-17"};
+  const isNew=!id;
+  const TYPES=["Working document","Final document","Presentation","Design file","Registration link","Event webpage","Speaker information","Agenda","Briefing note","Meeting notes","Spreadsheet","Reference material","External website","Form","Vendor/resource link"];
+  const ov=el("div","cah-modal-ov"); const m=el("div","cah-modal");
+  m.innerHTML=`<div class="cah-modal-head"><h2>${isNew?"Add resource":"Edit resource"}</h2><button class="cah-modal-x">×</button></div>`;
+  const body=el("div","cah-modal-body");
+  function f(label,key,type="text",opts){const w=el("label","cah-field");w.appendChild(el("span",null,label));let i;if(type==="select"){i=el("select");opts.forEach(o=>{const op=el("option",null,o);if(r[key]===o)op.selected=true;i.appendChild(op);});}else if(type==="textarea"){i=el("textarea");i.value=r[key]||"";}else{i=el("input");i.value=r[key]||"";}i.dataset.key=key;w.appendChild(i);return w;}
+  const g=el("div","cah-modal-grid");
+  g.appendChild(f("Resource name","name"));
+  g.appendChild(f("Type","type","select",TYPES));
+  g.appendChild(f("Workstream","workstream","select",WORKSTREAMS));
+  g.appendChild(f("Status","status","select",["Working","Final","Draft","Archived"]));
+  g.appendChild(f("Link (URL)","link"));
+  body.appendChild(g);
+  body.appendChild(f("Description","desc","textarea"));
+  m.appendChild(body);
+  const foot=el("div","cah-modal-foot");
+  if(!isNew){const del=el("button","cah-btn cah-btn-danger","Delete");del.onclick=()=>{if(confirm("Delete this resource?")){DATA.resources=DATA.resources.filter(x=>x.id!==r.id);persist();ov.remove();renderView();}};foot.appendChild(del);}
+  const sp=el("div");sp.style.flex="1";foot.appendChild(sp);
+  const c=el("button","cah-btn cah-btn-ghost","Cancel");c.onclick=()=>ov.remove();foot.appendChild(c);
+  const s=el("button","cah-btn cah-btn-primary",isNew?"Add":"Save");
+  s.onclick=()=>{m.querySelectorAll("[data-key]").forEach(i=>{r[i.dataset.key]=i.value;});if(!r.name.trim()){flash("Name required");return;}if(isNew)DATA.resources.push(r);persist();ov.remove();renderView();flash("Saved");};
+  foot.appendChild(s); m.appendChild(foot);
+  m.querySelector(".cah-modal-x").onclick=()=>ov.remove();
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  ov.appendChild(m);document.body.appendChild(ov);
+}
+
+/* ============================================================
+   PERSIST + BOOT
+   ============================================================ */
+const DATA_VERSION = 3; /* bump to refresh roster / add new sections on already-saved copies */
+function persist(){ return saveData(DATA); }
+async function boot(){
+  injectStyles();
+  let saved = null;
+  try{ saved = await loadData(); }catch(e){ console.error("load failed", e); }
+  if(saved){
+    DATA = saved;
+    /* keep user-edited content, but backfill new sections when the schema is outdated */
+    if(DATA.version !== DATA_VERSION){
+      DATA.people = SEED_PEOPLE;
+      if(!DATA.quickLinks || !DATA.quickLinks.length) DATA.quickLinks = SEED_QUICKLINKS;
+      if(!DATA.agenda || !DATA.agenda.length) DATA.agenda = SEED_AGENDA;
+      if(!DATA.sessions || !DATA.sessions.length) DATA.sessions = SESSIONS.map(s=>({...s}));
+      DATA.version = DATA_VERSION;
+      try{ await saveData(DATA); }catch(e){}
+    }
+  } else {
+    DATA = { version:DATA_VERSION, tasks:SEED_TASKS, resources:SEED_RESOURCES, people:SEED_PEOPLE,
+      quickLinks:SEED_QUICKLINKS, agenda:SEED_AGENDA, sessions:SESSIONS.map(s=>({...s})),
+      announcements:[{id:"A0",msg:"Hub is live — everyone can add and edit tasks, resources, links and notes here. This is our single source of truth.",date:"2026-08-17"}],
+      notes:[] };
+    try{ await saveData(DATA); }catch(e){}
+  }
+  render();
+  if(STORAGE_MODE === "memory") showStorageWarning();
+}
+
+/* Never leave a blank page */
+function safeBoot(){
+  try{ boot().catch(showBootError); }catch(e){ showBootError(e); }
+}
+function showBootError(e){
+  console.error(e);
+  const root = document.getElementById("cah-root") || document.body;
+  root.innerHTML = '<div style="font-family:system-ui,sans-serif;max-width:560px;margin:60px auto;padding:24px;'
+    + 'border:1px solid #e3e8ec;border-radius:12px;color:#1c2530">'
+    + '<h2 style="margin:0 0 8px">The hub could not start</h2>'
+    + '<p style="color:#5a6b7a;line-height:1.5">Try a hard refresh (Ctrl/Cmd + Shift + R), or open it in a normal (non-private) browser window.</p>'
+    + '<pre style="background:#f4f6f8;padding:10px;border-radius:8px;font-size:12px;overflow:auto">'
+    + String(e && e.message ? e.message : e) + '</pre></div>';
+}
+function showStorageWarning(){
+  if(document.getElementById("cah-storewarn")) return;
+  const bar = document.createElement("div");
+  bar.id = "cah-storewarn";
+  bar.innerHTML = 'Changes are kept for this session only — this browser is blocking saved storage '
+    + '(common when a file is opened directly from your computer, or in a private window). '
+    + 'Host the file online, or use <b>Backup</b> in the sidebar to save your data to a file.';
+  bar.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:9998;background:#B93A26;color:#fff;"
+    + "font-family:system-ui,sans-serif;font-size:12.5px;line-height:1.4;padding:10px 44px 10px 16px;box-shadow:0 -2px 10px rgba(0,0,0,.15)";
+  const x = document.createElement("button");
+  x.textContent = "×";
+  x.style.cssText = "position:absolute;right:12px;top:8px;background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1";
+  x.onclick = ()=>bar.remove();
+  bar.appendChild(x);
+  document.body.appendChild(bar);
+}
+
+/* ============================================================
+   STYLES
+   ============================================================ */
+function injectStyles(){
+  const css = `
+  #cah-root, #cah-root *{box-sizing:border-box;}
+  #cah-root{
+    --orange:${C.orange};--orangeT:${C.orangeTint};--green:${C.green};--greenS:${C.greenShade};
+    --blue:${C.blue};--blueT:${C.blueTint};--blueS:${C.blueShade};--blueD:${C.blueDark};
+    --red:${C.red};--redD:${C.redDark};--grey:${C.grey};--char:${C.charcoal};
+    --bg:#f4f6f8;--panel:#ffffff;--line:#e3e8ec;--ink:#1c2530;--ink2:#5a6b7a;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    color:var(--ink);display:flex;min-height:640px;background:
+      linear-gradient(180deg,#eaf3fb 0%,#f4f6f8 220px);border-radius:14px;overflow:hidden;
+    box-shadow:0 1px 3px rgba(2,31,60,.06);border:1px solid var(--line);
+  }
+  /* SIDEBAR */
+  .cah-side{width:238px;flex-shrink:0;background:linear-gradient(175deg,var(--blueD) 0%,#012a3e 100%);
+    color:#dbeaf3;display:flex;flex-direction:column;padding:20px 14px;}
+  .cah-brand{display:flex;gap:11px;align-items:center;padding:0 6px 20px;}
+  .cah-cloud svg{width:34px;height:24px;color:var(--blueT);}
+  .cah-cloud svg:first-child{display:none;}
+  .cah-brand-name{font-weight:750;font-size:14.5px;letter-spacing:-.2px;color:#fff;line-height:1.1;}
+  .cah-brand-year{font-size:11px;color:var(--blueT);letter-spacing:.3px;margin-top:2px;}
+  .cah-nav{display:flex;flex-direction:column;gap:2px;margin-top:6px;}
+  .cah-nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border:none;background:none;
+    color:#bcd2e0;font-size:13.3px;text-align:left;border-radius:9px;cursor:pointer;width:100%;
+    font-family:inherit;transition:background .15s,color .15s;}
+  .cah-nav-item .ci{display:flex;width:18px;height:18px;opacity:.85;}
+  .cah-nav-item .ci svg{width:18px;height:18px;}
+  .cah-nav-item:hover{background:rgba(255,255,255,.07);color:#fff;}
+  .cah-nav-item.active{background:var(--orange);color:#fff;box-shadow:0 3px 10px rgba(232,87,36,.35);}
+  .cah-nav-item.active .ci{opacity:1;}
+  .cah-side-foot{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);}
+  .cah-drive{display:flex;gap:9px;align-items:center;color:#cfe2ee;text-decoration:none;font-size:12.5px;
+    padding:9px 11px;border-radius:8px;background:rgba(255,255,255,.06);}
+  .cah-drive svg{width:16px;height:16px;}
+  .cah-drive:hover{background:rgba(255,255,255,.12);color:#fff;}
+  .cah-backup-row{display:flex;gap:6px;margin-top:10px;}
+  .cah-backup-btn{flex:1;font-family:inherit;font-size:11.5px;color:#cfe2ee;background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:8px 6px;cursor:pointer;transition:background .15s;}
+  .cah-backup-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+  .cah-side-count{margin-top:12px;padding:0 4px;font-size:12px;color:var(--blueT);}
+  .cah-side-count b{font-size:20px;color:#fff;font-weight:750;}
+  /* MAIN */
+  .cah-main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg);}
+  .cah-top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 26px 16px;
+    border-bottom:1px solid var(--line);background:rgba(255,255,255,.6);backdrop-filter:blur(4px);}
+  .cah-top h1{margin:0;font-size:20px;font-weight:750;letter-spacing:-.4px;color:var(--ink);}
+  .cah-top-sub{font-size:12px;color:var(--ink2);}
+  .cah-top-right{display:flex;align-items:center;gap:12px;}
+  .cah-lens-wrap{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink2);text-transform:uppercase;letter-spacing:.4px;}
+  .cah-lens{font-family:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer;}
+  .cah-content{padding:22px 26px 40px;overflow-y:auto;flex:1;}
+  /* BUTTONS */
+  .cah-btn{font-family:inherit;font-size:13px;font-weight:600;padding:8px 15px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:filter .15s,background .15s;}
+  .cah-btn-primary{background:var(--orange);color:#fff;}
+  .cah-btn-primary:hover{filter:brightness(1.06);}
+  .cah-btn-ghost{background:#fff;border-color:var(--line);color:var(--ink);}
+  .cah-btn-ghost:hover{background:#f0f3f6;}
+  .cah-btn-danger{background:#fff;border-color:var(--red);color:var(--red);}
+  .cah-btn-danger:hover{background:var(--red);color:#fff;}
+  /* HERO */
+  .cah-hero{display:flex;justify-content:space-between;gap:20px;background:linear-gradient(120deg,var(--blueD),var(--blueS) 85%);
+    color:#fff;border-radius:14px;padding:24px 26px;position:relative;overflow:hidden;margin-bottom:16px;}
+  .cah-hero::after{content:"";position:absolute;right:-40px;top:-60px;width:260px;height:260px;
+    background:radial-gradient(circle,rgba(134,191,222,.35),transparent 65%);}
+  .cah-eyebrow{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:var(--blueT);font-weight:600;}
+  .cah-hero-title{font-size:27px;font-weight:780;letter-spacing:-.7px;margin-top:6px;line-height:1.05;}
+  .cah-hero-tag{font-size:15px;color:#cfe6f4;margin-top:2px;}
+  .cah-hero-meta{font-size:12.5px;color:#a9cde3;margin-top:12px;}
+  .cah-hero-count{text-align:center;z-index:1;flex-shrink:0;align-self:center;}
+  .cah-count-num{font-size:46px;font-weight:800;line-height:1;color:var(--orangeT);}
+  .cah-count-lbl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#bcd8ea;margin-top:2px;}
+  /* PROGRESS */
+  .cah-progress-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px;}
+  .cah-prog-head{display:flex;justify-content:space-between;font-size:13px;color:var(--ink2);margin-bottom:9px;}
+  .cah-prog-head b{color:var(--greenS);font-size:16px;}
+  .cah-prog-track{height:9px;background:#eef2f5;border-radius:6px;overflow:hidden;}
+  .cah-prog-track.cah-slim{height:6px;}
+  .cah-prog-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--greenS));border-radius:6px;transition:width .4s;}
+  .cah-prog-legend{font-size:11.5px;color:var(--ink2);margin-top:8px;}
+  /* TILES */
+  .cah-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+  .cah-tile{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--tc);border-radius:11px;
+    padding:15px 16px;text-align:left;cursor:pointer;font-family:inherit;transition:transform .12s,box-shadow .12s;}
+  .cah-tile:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(2,31,60,.09);}
+  .cah-tile-n{font-size:28px;font-weight:780;color:var(--tc);line-height:1;}
+  .cah-tile-l{font-size:12px;color:var(--ink2);margin-top:5px;}
+  /* DASH GRID */
+  .cah-dash-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;}
+  .cah-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+  .cah-card-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .cah-card-head h3{margin:0;font-size:14.5px;font-weight:700;letter-spacing:-.2px;}
+  .cah-card-sub{font-size:11.5px;color:var(--ink2);}
+  .cah-card-action{margin-left:auto;font-family:inherit;font-size:12px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;}
+  .cah-card-action:hover{background:#eaf4fb;}
+  .cah-mini-list{display:flex;flex-direction:column;}
+  .cah-mini-row{display:flex;align-items:center;gap:10px;padding:9px 6px;border:none;background:none;
+    border-bottom:1px solid #f0f3f5;cursor:pointer;font-family:inherit;text-align:left;width:100%;font-size:13px;}
+  .cah-mini-row:hover{background:#f7fafc;}
+  .cah-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .cah-mini-task{flex:1;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cah-mini-person{font-size:11.5px;color:var(--ink2);flex-shrink:0;}
+  .cah-mini-tag{font-size:11px;font-weight:600;flex-shrink:0;min-width:64px;text-align:right;}
+  .cah-dash-side{display:flex;flex-direction:column;gap:16px;}
+  .cah-ann-list{display:flex;flex-direction:column;gap:8px;}
+  .cah-ann-row{position:relative;background:#f5f9fc;border:1px solid #e6eef4;border-radius:9px;padding:10px 30px 10px 12px;}
+  .cah-ann-msg{font-size:12.5px;line-height:1.45;color:var(--ink);}
+  .cah-ann-date{font-size:10.5px;color:var(--ink2);margin-top:4px;}
+  .cah-x{position:absolute;top:6px;right:7px;border:none;background:none;color:var(--grey);font-size:17px;cursor:pointer;line-height:1;padding:2px 5px;border-radius:5px;}
+  .cah-x:hover{background:#ffe6e0;color:var(--red);}
+  .cah-ql-list{display:flex;flex-direction:column;gap:2px;}
+  .cah-ql-row{display:flex;align-items:center;gap:4px;border-radius:8px;}
+  .cah-ql-row:hover{background:#eaf4fb;}
+  .cah-ql{flex:1;display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-size:12.8px;min-width:0;}
+  .cah-ql svg{width:15px;height:15px;color:var(--blue);flex-shrink:0;}
+  .cah-ql span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cah-ql-edit{opacity:0;font-family:inherit;font-size:11px;color:var(--ink2);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0;}
+  .cah-ql-row:hover .cah-ql-edit{opacity:1;}
+  .cah-ql-edit:hover{background:#dcecf7;color:var(--blue);}
+  .cah-empty{padding:16px;text-align:center;color:var(--ink2);font-size:12.5px;font-style:italic;}
+  /* AGENDA INFOGRAPHIC */
+  .cah-agenda-card{margin-bottom:18px;}
+  .cah-ag-legend{display:flex;flex-wrap:wrap;gap:14px;margin:2px 0 14px;}
+  .cah-ag-leg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink2);}
+  .cah-ag-leg i{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  .cah-ag-days{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .cah-ag-day{background:linear-gradient(180deg,#f5fafd,#ffffff 60px);border:1px solid var(--line);border-radius:11px;padding:12px;}
+  .cah-ag-dayhead{display:flex;align-items:baseline;gap:9px;margin-bottom:10px;padding-bottom:8px;border-bottom:1.5px solid var(--blueT);}
+  .cah-ag-daynum{font-size:14px;font-weight:750;color:var(--blueD);}
+  .cah-ag-daydate{font-size:11.5px;color:var(--blue);font-weight:600;}
+  .cah-ag-row{display:grid;grid-template-columns:74px 1fr;gap:10px;padding:7px 0;border-bottom:1px dashed #eef2f5;}
+  .cah-ag-row:last-child{border-bottom:none;}
+  .cah-ag-time{font-size:10.5px;color:var(--ink2);font-variant-numeric:tabular-nums;padding-top:2px;font-weight:600;}
+  .cah-ag-slot{display:flex;flex-direction:column;gap:5px;min-width:0;}
+  .cah-ag-a{font-size:12px;color:var(--ink);line-height:1.35;border-left:3px solid var(--agc);padding-left:9px;font-weight:550;}
+  .cah-ag-b{font-size:11.5px;color:var(--ink2);line-height:1.35;border-left:3px solid var(--green);padding-left:9px;}
+  .cah-ag-track{display:inline-block;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--greenS);font-weight:700;margin-right:5px;}
+  .cah-ag-row.brk .cah-ag-a{border-left-color:#c3ccd4;color:var(--ink2);font-style:italic;font-weight:400;}
+  /* PERSON PICKER */
+  .cah-picker{display:flex;flex-direction:column;gap:6px;}
+  .cah-picker-chips{display:flex;flex-wrap:wrap;gap:5px;min-height:4px;}
+  .cah-picker-empty{font-size:12px;color:var(--grey);font-style:italic;}
+  .cah-picker-chip{display:inline-flex;align-items:center;gap:5px;background:#eaf4fb;color:var(--blueS);
+    border:1px solid #d3e6f2;border-radius:15px;padding:3px 4px 3px 10px;font-size:12px;font-weight:500;}
+  .cah-picker-x{border:none;background:none;color:var(--blueS);font-size:15px;line-height:1;cursor:pointer;padding:0 4px;border-radius:50%;}
+  .cah-picker-x:hover{background:var(--blue);color:#fff;}
+  .cah-picker-select{font-family:inherit;font-size:12.5px;padding:7px 9px;border:1px dashed var(--blueT);border-radius:8px;background:#fbfdfe;color:var(--blueS);cursor:pointer;width:100%;}
+  .cah-picker-select:focus{outline:none;border-style:solid;border-color:var(--blue);}
+  /* PEOPLE BAR */
+  .cah-people-bar{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+  .cah-people-intro{flex:1;min-width:220px;font-size:13px;color:var(--ink2);background:#eef6fb;border:1px solid #d9e9f4;border-radius:9px;padding:11px 14px;}
+  .cah-person-card{position:relative;}
+  .cah-person-editx{position:absolute;top:10px;right:10px;border:none;background:none;color:var(--grey);cursor:pointer;padding:4px;border-radius:6px;opacity:0;transition:opacity .15s;}
+  .cah-person-editx svg{width:14px;height:14px;}
+  .cah-person-card:hover .cah-person-editx{opacity:1;}
+  .cah-person-editx:hover{background:#eef2f5;color:var(--blue);}
+  .cah-noemail{color:var(--grey);font-style:italic;}
+  /* TIMELINE additions */
+  .cah-tl-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+  .cah-tl-sum{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 15px;}
+  .cah-tl-sum b{font-size:24px;font-weight:750;color:var(--blueD);display:block;line-height:1;}
+  .cah-tl-sum span{font-size:11px;color:var(--ink2);}
+  .cah-tl-sum.warn b{color:var(--red);}
+  .cah-tl-lens{font-size:12px;color:var(--orange);background:#fff5ef;border:1px solid #f6d9c9;border-radius:8px;padding:8px 12px;margin-bottom:14px;}
+  .cah-tl-month{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:1px;color:var(--blueS);margin:6px 0 10px -22px;padding-left:22px;}
+  .cah-tl-name{flex:1;}
+  .cah-ws-pill.sm{font-size:9.5px;padding:2px 6px;}
+  .cah-tl-item{border-left:3px solid var(--stc);}
+  /* SESSIONS editable */
+  .cah-sess-table td{vertical-align:top;}
+  .cah-sess-table .cah-picker{min-width:150px;}
+  .cah-modal-note{font-size:12px;color:var(--ink2);margin:0 0 14px;line-height:1.5;}
+  .cah-edit-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:8px;}
+  .cah-edit-table th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2);padding:5px 6px;border-bottom:1px solid var(--line);}
+  .cah-edit-table td{padding:3px 4px;}
+  .cah-edit-table input,.cah-edit-table select{width:100%;font-family:inherit;font-size:12.5px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;}
+  .cah-add-row{margin:2px 0 6px;}
+  /* CHIPBAR */
+  .cah-chipbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+  .cah-chip{font-family:inherit;font-size:12.5px;padding:7px 13px;border-radius:20px;border:1px solid var(--line);
+    background:#fff;color:var(--ink2);cursor:pointer;}
+  .cah-chip:hover{border-color:var(--blueT);color:var(--ink);}
+  .cah-chip.on{background:var(--blueD);color:#fff;border-color:var(--blueD);}
+  .cah-search{margin-left:auto;font-family:inherit;font-size:13px;padding:8px 13px;border:1px solid var(--line);
+    border-radius:8px;background:#fff;min-width:200px;}
+  /* TABLE */
+  .cah-table-wrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .cah-table-count{font-size:11.5px;color:var(--ink2);padding:11px 16px 0;}
+  .cah-table{width:100%;border-collapse:collapse;font-size:12.8px;}
+  .cah-table thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink2);
+    font-weight:650;padding:11px 14px;border-bottom:1px solid var(--line);background:#fafcfd;}
+  .cah-table tbody td{padding:11px 14px;border-bottom:1px solid #f0f3f5;vertical-align:top;}
+  .cah-trow{cursor:pointer;transition:background .12s;}
+  .cah-trow:hover{background:#f7fafc;}
+  .cah-td-task{font-weight:600;color:var(--ink);max-width:280px;}
+  .cah-td-note{display:block;font-weight:400;font-size:11px;color:var(--ink2);margin-top:3px;line-height:1.35;}
+  .cah-ws-pill{font-size:10.5px;background:#eef4f9;color:var(--blueS);padding:3px 8px;border-radius:5px;white-space:nowrap;}
+  .cah-prio{font-size:11px;font-weight:650;color:var(--pc);}
+  .cah-prio::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--pc);margin-right:5px;vertical-align:middle;}
+  .cah-status{font-size:11px;font-weight:600;color:#fff;background:var(--sc);padding:3px 9px;border-radius:20px;white-space:nowrap;}
+  .cah-neg{color:var(--red);font-weight:650;}
+  .cah-warn{color:var(--orange);font-weight:600;}
+  .cah-link-ic{display:inline-flex;color:var(--blue);}
+  .cah-link-ic svg{width:15px;height:15px;}
+  /* WORKSTREAMS */
+  .cah-ws-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+  .cah-ws-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 16px;}
+  .cah-ws-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
+  .cah-ws-head h3{margin:0;font-size:14px;font-weight:700;letter-spacing:-.2px;}
+  .cah-ws-pct{font-size:13px;font-weight:700;color:var(--greenS);}
+  .cah-ws-tasks{display:flex;flex-direction:column;margin-top:11px;}
+  .cah-ws-task{display:flex;align-items:center;gap:9px;padding:7px 4px;border:none;background:none;
+    border-bottom:1px solid #f2f5f7;cursor:pointer;font-family:inherit;text-align:left;font-size:12.5px;width:100%;}
+  .cah-ws-task:hover{background:#f7fafc;}
+  .cah-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .cah-ws-task-name{flex:1;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cah-ws-task-name.done{color:var(--ink2);text-decoration:line-through;}
+  .cah-ws-task-p{font-size:11px;color:var(--ink2);flex-shrink:0;}
+  /* DEPENDENCIES */
+  .cah-dep-intro{font-size:13px;color:var(--ink2);background:#eef6fb;border:1px solid #d9e9f4;border-radius:9px;padding:11px 14px;margin-bottom:16px;}
+  .cah-dep-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:13px;}
+  .cah-dep-card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--dc);border-radius:11px;padding:14px 15px;cursor:pointer;transition:box-shadow .12s;}
+  .cah-dep-card:hover{box-shadow:0 5px 14px rgba(2,31,60,.08);}
+  .cah-dep-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;}
+  .cah-dep-prio{font-size:11px;font-weight:650;}
+  .cah-dep-task{font-size:13.5px;font-weight:650;color:var(--ink);line-height:1.3;margin-bottom:10px;}
+  .cah-dep-chain{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .cah-dep-node{font-size:11.5px;background:#eef2f5;padding:4px 9px;border-radius:6px;color:var(--ink);}
+  .cah-dep-node.hl{background:var(--orangeT);color:#5a2410;font-weight:600;}
+  .cah-dep-arrow{font-size:10.5px;color:var(--ink2);text-transform:uppercase;letter-spacing:.5px;}
+  .cah-dep-note{font-size:11.5px;color:var(--ink2);margin-top:9px;line-height:1.4;}
+  /* PEOPLE */
+  .cah-people-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+  .cah-person-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 16px;display:flex;flex-direction:column;}
+  .cah-person-head{display:flex;gap:11px;align-items:center;margin-bottom:11px;}
+  .cah-avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--blueS));
+    color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+  .cah-person-id{min-width:0;}
+  .cah-person-name{font-size:14px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .cah-person-role{font-size:11px;color:var(--blueS);margin-top:1px;font-weight:600;}
+  .cah-person-email{font-size:11px;color:var(--ink2);text-decoration:none;word-break:break-all;display:block;margin-top:2px;}
+  .cah-person-email:hover{color:var(--blue);text-decoration:underline;}
+  .cah-role-pill{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#fff;background:var(--greenS);padding:2px 6px;border-radius:5px;}
+  .cah-role-pill.ext{background:var(--grey);}
+  .cah-person-idle{opacity:.72;}
+  .cah-person-idle:hover{opacity:1;}
+  .cah-person-stats{display:flex;gap:12px;font-size:11.5px;color:var(--ink2);margin-bottom:10px;}
+  .cah-person-stats b{color:var(--ink);font-size:13px;}
+  .cah-person-tasks{display:flex;flex-direction:column;flex:1;}
+  .cah-person-task{display:flex;align-items:center;gap:8px;padding:6px 3px;border:none;background:none;cursor:pointer;
+    font-family:inherit;text-align:left;font-size:12px;color:var(--ink);border-bottom:1px solid #f2f5f7;width:100%;}
+  .cah-person-task:hover{background:#f7fafc;}
+  .cah-person-more{font-size:11px;color:var(--blue);padding:6px 3px;}
+  .cah-person-lens{margin-top:11px;font-family:inherit;font-size:12px;font-weight:600;color:var(--blue);
+    background:#eef6fb;border:1px solid #d9e9f4;border-radius:8px;padding:8px;cursor:pointer;}
+  .cah-person-lens:hover{background:#dcecf7;}
+  /* SESSIONS */
+  .cah-day-head{font-size:14px;font-weight:700;color:var(--blueD);margin:18px 0 8px;padding-bottom:6px;border-bottom:2px solid var(--blueT);}
+  .cah-day-head:first-of-type{margin-top:4px;}
+  .cah-hl-row{background:#fff5ef !important;}
+  .cah-hl-row td:first-child{box-shadow:inset 3px 0 var(--orange);}
+  /* TIMELINE */
+  .cah-timeline{position:relative;padding-left:22px;}
+  .cah-timeline::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,var(--blueT),#e3e8ec);}
+  .cah-tl-node{position:relative;margin-bottom:18px;}
+  .cah-tl-marker{position:absolute;left:-22px;top:3px;width:11px;height:11px;border-radius:50%;background:#fff;border:2.5px solid var(--blue);}
+  .cah-tl-marker.past{border-color:var(--grey);}
+  .cah-tl-marker.near{border-color:var(--orange);box-shadow:0 0 0 4px rgba(232,87,36,.15);}
+  .cah-tl-marker.event{border-color:var(--red);background:var(--red);width:14px;height:14px;left:-23px;box-shadow:0 0 0 5px rgba(185,58,38,.18);}
+  .cah-tl-date{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+  .cah-tl-rel{font-size:11px;font-weight:500;color:var(--ink2);margin-left:6px;}
+  .cah-tl-items{display:flex;flex-direction:column;gap:5px;}
+  .cah-tl-item{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:9px 12px;cursor:pointer;font-family:inherit;text-align:left;font-size:12.5px;color:var(--ink);width:100%;}
+  .cah-tl-item:hover{border-color:var(--blueT);background:#f7fafc;}
+  .cah-tl-item span:nth-child(2){flex:1;}
+  .cah-tl-person{font-size:11px;color:var(--ink2);}
+  .cah-tl-event .cah-tl-date b{color:var(--red);}
+  .cah-tl-eventlbl{background:linear-gradient(120deg,var(--blueD),var(--blueS));color:#fff;border-radius:8px;padding:11px 14px;font-size:13px;font-weight:600;}
+  /* RESOURCES */
+  .cah-res-sec{margin-bottom:22px;}
+  .cah-res-secttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--blueS);margin-bottom:10px;}
+  .cah-res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}
+  .cah-res-card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:13px 15px;display:flex;flex-direction:column;}
+  .cah-res-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .cah-res-type{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2);background:#f0f3f6;padding:3px 8px;border-radius:5px;}
+  .cah-res-status{font-size:10px;font-weight:600;color:var(--blue);}
+  .cah-res-status.final{color:var(--greenS);}
+  .cah-res-name{font-size:13.5px;font-weight:650;color:var(--ink);line-height:1.25;margin-bottom:5px;}
+  .cah-res-desc{font-size:11.5px;color:var(--ink2);line-height:1.4;flex:1;margin-bottom:11px;}
+  .cah-res-foot{display:flex;justify-content:space-between;align-items:center;}
+  .cah-res-open{font-size:12px;font-weight:600;color:var(--blue);text-decoration:none;}
+  .cah-res-open:hover{text-decoration:underline;}
+  .cah-res-nolink{font-size:11px;color:var(--grey);font-style:italic;}
+  .cah-res-edit{font-family:inherit;font-size:11.5px;color:var(--ink2);background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:5px;}
+  .cah-res-edit:hover{background:#f0f3f6;color:var(--ink);}
+  /* NOTES */
+  .cah-notes-list{display:flex;flex-direction:column;gap:12px;margin-top:16px;}
+  .cah-note-card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px 16px;}
+  .cah-note-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;position:relative;}
+  .cah-note-head b{font-size:14px;}
+  .cah-note-head span{font-size:11.5px;color:var(--ink2);}
+  .cah-note-body{font-size:12.8px;line-height:1.55;color:var(--ink);}
+  /* MODAL */
+  .cah-modal-ov{position:fixed;inset:0;background:rgba(2,31,60,.42);backdrop-filter:blur(3px);z-index:9999;
+    display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;}
+  .cah-modal{background:#fff;border-radius:14px;width:100%;max-width:620px;box-shadow:0 20px 60px rgba(2,31,60,.3);}
+  .cah-modal-wide{max-width:820px;}
+  .cah-modal-sm{max-width:460px;}
+  .cah-modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line);}
+  .cah-modal-head h2{margin:0;font-size:17px;font-weight:750;}
+  .cah-modal-x{border:none;background:none;font-size:24px;color:var(--grey);cursor:pointer;line-height:1;}
+  .cah-modal-x:hover{color:var(--red);}
+  .cah-modal-body{padding:20px 22px;}
+  .cah-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .cah-field{display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.3px;}
+  .cah-field input,.cah-field select,.cah-field textarea{font-family:inherit;font-size:13.5px;font-weight:400;text-transform:none;letter-spacing:0;
+    padding:9px 11px;border:1px solid var(--line);border-radius:8px;color:var(--ink);background:#fff;width:100%;}
+  .cah-field textarea{min-height:72px;resize:vertical;}
+  .cah-field input:focus,.cah-field select:focus,.cah-field textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(2,155,214,.13);}
+  .cah-modal-foot{display:flex;gap:10px;align-items:center;padding:16px 22px;border-top:1px solid var(--line);}
+  /* FLASH */
+  .cah-flash{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);background:var(--blueD);color:#fff;
+    padding:11px 20px;border-radius:9px;font-size:13px;font-weight:500;z-index:10000;opacity:0;transition:opacity .3s,transform .3s;
+    box-shadow:0 8px 24px rgba(2,31,60,.3);font-family:-apple-system,sans-serif;}
+  .cah-flash.show{opacity:1;transform:translate(-50%,0);}
+  /* RESPONSIVE */
+  @media(max-width:1080px){
+    #cah-root{flex-direction:column;}
+    .cah-side{width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 16px;gap:8px;}
+    .cah-brand{padding:0;flex:1;}
+    .cah-nav{flex-direction:row;flex-wrap:wrap;order:3;width:100%;}
+    .cah-nav-item{width:auto;padding:8px 11px;font-size:12.5px;}
+    .cah-nav-item .ci{width:17px;height:17px;}
+    .cah-side-foot{margin:0;padding:0;border:none;display:flex;gap:12px;align-items:center;}
+    .cah-side-count{margin:0;}
+    .cah-dash-grid{grid-template-columns:1fr;}
+    .cah-tiles{grid-template-columns:1fr 1fr;}
+    .cah-modal-grid{grid-template-columns:1fr;}
+    .cah-ag-days{grid-template-columns:1fr;}
+    .cah-tl-summary{grid-template-columns:1fr 1fr;}
+  }
+  @media(max-width:620px){
+    .cah-content{padding:16px 14px 40px;}
+    .cah-hero{flex-direction:column;}.cah-hero-count{align-self:flex-start;}
+    .cah-top{flex-wrap:wrap;}.cah-search{min-width:140px;}
+    .cah-table{font-size:11.5px;}
+    .cah-table:not(.cah-sess-table) thead th:nth-child(2),.cah-table:not(.cah-sess-table) td:nth-child(2){display:none;}
+    .cah-ag-row{grid-template-columns:60px 1fr;}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none !important;}}
+  `;
+  const st = document.createElement("style"); st.textContent=css; document.head.appendChild(st);
+}
+
+safeBoot();
+</script>
+</body>
+</html>
